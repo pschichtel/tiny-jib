@@ -48,7 +48,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 
 /** Builds a container image to registry. */
-public class BuildImageTask extends DefaultTask implements JibTask {
+public class BuildImageTask extends DefaultTask implements TinyJibTask {
 
   private static final String HELPFUL_SUGGESTIONS_PREFIX = "Build image failed";
 

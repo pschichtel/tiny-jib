@@ -16,8 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.gradle.skaffold.SkaffoldParameters;
-import com.google.cloud.tools.jib.plugins.common.PropertyNames;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
@@ -92,7 +90,6 @@ public class JibExtension {
   private final ExtraDirectoriesParameters extraDirectories;
   private final DockerClientParameters dockerClient;
   private final OutputPathsParameters outputPaths;
-  private final SkaffoldParameters skaffold;
   private final Property<Boolean> allowInsecureRegistries;
   private final Property<String> containerizingMode;
   private final Property<String> configurationName;
@@ -113,7 +110,6 @@ public class JibExtension {
     extraDirectories = objectFactory.newInstance(ExtraDirectoriesParameters.class, project);
     dockerClient = objectFactory.newInstance(DockerClientParameters.class);
     outputPaths = objectFactory.newInstance(OutputPathsParameters.class, project);
-    skaffold = objectFactory.newInstance(SkaffoldParameters.class, project);
 
     pluginExtensions = objectFactory.listProperty(ExtensionParameters.class).empty();
     extensionParametersSpec =
@@ -150,10 +146,6 @@ public class JibExtension {
 
   public void outputPaths(Action<? super OutputPathsParameters> action) {
     action.execute(outputPaths);
-  }
-
-  public void skaffold(Action<? super SkaffoldParameters> action) {
-    action.execute(skaffold);
   }
 
   public void pluginExtensions(Action<? super ExtensionParametersSpec> action) {
@@ -204,25 +196,15 @@ public class JibExtension {
     return outputPaths;
   }
 
-  @Nested
-  @Optional
-  public SkaffoldParameters getSkaffold() {
-    return skaffold;
-  }
-
   @Input
   boolean getAllowInsecureRegistries() {
-    if (System.getProperty(PropertyNames.ALLOW_INSECURE_REGISTRIES) != null) {
-      return Boolean.getBoolean(PropertyNames.ALLOW_INSECURE_REGISTRIES);
-    }
     return allowInsecureRegistries.get();
   }
 
   @Input
   @Optional
   public String getContainerizingMode() {
-    String property = System.getProperty(PropertyNames.CONTAINERIZING_MODE);
-    return property != null ? property : containerizingMode.get();
+    return containerizingMode.get();
   }
 
   /**
@@ -234,10 +216,6 @@ public class JibExtension {
   @Input
   @Optional
   public Property<String> getConfigurationName() {
-    String property = System.getProperty(PropertyNames.CONFIGURATION_NAME);
-    if (property != null && !property.equals(configurationName.get())) {
-      configurationName.set(property);
-    }
     return configurationName;
   }
 

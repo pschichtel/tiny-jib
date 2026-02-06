@@ -16,12 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.gradle.skaffold.CheckJibVersionTask;
-import com.google.cloud.tools.jib.gradle.skaffold.FilesTaskV2;
-import com.google.cloud.tools.jib.gradle.skaffold.InitTask;
-import com.google.cloud.tools.jib.gradle.skaffold.SyncMapTask;
-import com.google.cloud.tools.jib.plugins.common.VersionChecker;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,62 +29,16 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Jar;
-import org.gradle.util.GradleVersion;
 
 public class JibPlugin implements Plugin<Project> {
-
-  @VisibleForTesting static final GradleVersion GRADLE_MIN_VERSION = GradleVersion.version("5.1");
 
   public static final String JIB_EXTENSION_NAME = "jib";
   public static final String BUILD_IMAGE_TASK_NAME = "jib";
   public static final String BUILD_TAR_TASK_NAME = "jibBuildTar";
   public static final String BUILD_DOCKER_TASK_NAME = "jibDockerBuild";
-  public static final String SKAFFOLD_FILES_TASK_V2_NAME = "_jibSkaffoldFilesV2";
-  public static final String SKAFFOLD_INIT_TASK_NAME = "_jibSkaffoldInit";
-  public static final String SKAFFOLD_SYNC_MAP_TASK_NAME = "_jibSkaffoldSyncMap";
-  public static final String SKAFFOLD_CHECK_REQUIRED_VERSION_TASK_NAME =
-      "_skaffoldFailIfJibOutOfDate";
-
-  public static final String REQUIRED_VERSION_PROPERTY_NAME = "jib.requiredVersion";
-
-  private static void checkGradleVersion() {
-    if (GRADLE_MIN_VERSION.compareTo(GradleVersion.current()) > 0) {
-      throw new GradleException(
-          "Detected "
-              + GradleVersion.current()
-              + ", but jib requires "
-              + GRADLE_MIN_VERSION
-              + " or higher. You can upgrade by running 'gradle wrapper --gradle-version="
-              + GRADLE_MIN_VERSION.getVersion()
-              + "'.");
-    }
-  }
-
-  /** Check the Jib version matches the required version (if specified). */
-  private static void checkJibVersion() {
-    // todo: should retrieve from project properties?
-    String requiredVersion = System.getProperty(REQUIRED_VERSION_PROPERTY_NAME);
-    if (requiredVersion == null) {
-      return;
-    }
-    String actualVersion = GradleProjectProperties.TOOL_VERSION;
-    if (actualVersion == null) {
-      throw new GradleException("Could not determine Jib plugin version");
-    }
-    VersionChecker<GradleVersion> checker = new VersionChecker<>(GradleVersion::version);
-    if (!checker.compatibleVersion(requiredVersion, actualVersion)) {
-      String failure =
-          String.format(
-              "Jib plugin version is %s but is required to be %s", actualVersion, requiredVersion);
-      throw new GradleException(failure);
-    }
-  }
 
   @Override
   public void apply(Project project) {
-    checkGradleVersion();
-    checkJibVersion();
-
     JibExtension jibExtension =
         project.getExtensions().create(JIB_EXTENSION_NAME, JibExtension.class, project);
 
@@ -124,22 +72,6 @@ public class JibPlugin implements Plugin<Project> {
               task.setDescription("Builds a container image to a tarball.");
               task.setJibExtension(jibExtension);
             });
-
-    tasks
-        .register(SKAFFOLD_FILES_TASK_V2_NAME, FilesTaskV2.class)
-        .configure(task -> task.setJibExtension(jibExtension));
-    tasks
-        .register(SKAFFOLD_INIT_TASK_NAME, InitTask.class)
-        .configure(task -> task.setJibExtension(jibExtension));
-    TaskProvider<SyncMapTask> syncMapTask =
-        tasks.register(
-            SKAFFOLD_SYNC_MAP_TASK_NAME,
-            SyncMapTask.class,
-            task -> task.setJibExtension(jibExtension));
-
-    // A check to catch older versions of Jib.  This can be removed once we are certain people
-    // are using Jib 1.3.1 or later.
-    tasks.register(SKAFFOLD_CHECK_REQUIRED_VERSION_TASK_NAME, CheckJibVersionTask.class);
 
     project.afterEvaluate(
         projectAfterEvaluation -> {
@@ -194,7 +126,7 @@ public class JibPlugin implements Plugin<Project> {
                   .getByName(jibExtension.getConfigurationName().get()));
 
           Set<TaskProvider<?>> jibTaskProviders =
-              ImmutableSet.of(buildImageTask, buildDockerTask, buildTarTask, syncMapTask);
+              ImmutableSet.of(buildImageTask, buildDockerTask, buildTarTask);
           jibTaskProviders.forEach(
               provider ->
                   provider.configure(task -> jibDependencies.forEach(dep -> task.dependsOn(dep))));

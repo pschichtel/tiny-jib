@@ -53,9 +53,6 @@ public class TargetImageParameters {
   @Nullable
   @Optional
   public String getImage() {
-    if (System.getProperty(PropertyNames.TO_IMAGE) != null) {
-      return System.getProperty(PropertyNames.TO_IMAGE);
-    }
     return image.getOrNull();
   }
 

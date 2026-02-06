@@ -49,7 +49,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 
 /** Builds a container image and exports to the default Docker daemon. */
-public class BuildDockerTask extends DefaultTask implements JibTask {
+public class BuildDockerTask extends DefaultTask implements TinyJibTask {
 
   private static final String HELPFUL_SUGGESTIONS_PREFIX = "Build to Docker daemon failed";
 
