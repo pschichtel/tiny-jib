@@ -18,15 +18,6 @@ repositories {
 
 dependencies {
   implementation("com.google.cloud.tools:jib-core:0.28.1")
-
-  testImplementation("junit:junit:4.13.2")
-  testImplementation("com.google.guava:guava:32.1.2-jre")
-  testImplementation("pl.pragmatists:JUnitParams:1.1.1")
-  testImplementation("com.google.truth:truth:1.1.5")
-  testImplementation("com.google.truth.extensions:truth-java8-extension:1.1.5")
-  testImplementation("org.mockito:mockito-core:4.11.0")
-  testImplementation("org.slf4j:slf4j-api:2.0.7")
-  testImplementation("com.github.stefanbirkner:system-rules:1.19.0")
 }
 
 gradlePlugin {
