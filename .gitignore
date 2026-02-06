@@ -1,16 +1,5 @@
 build/
-!jib-gradle-plugin/src/test/resources/gradle/application/build/
-target/
-out
-bin/
+.idea/
 *.iml
-*.ipr
-*.iws
-.idea
 .gradle/
-# https://github.com/takari/maven-wrapper#usage-without-binary-jar
-**/.mvn/wrapper/maven-wrapper.jar
-.settings/
-.classpath
-.project
-.DS_Store
+.kotlin/
