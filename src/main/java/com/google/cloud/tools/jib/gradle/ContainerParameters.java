@@ -17,9 +17,6 @@
 package com.google.cloud.tools.jib.gradle;
 
 import com.google.cloud.tools.jib.api.buildplan.ImageFormat;
-import com.google.cloud.tools.jib.plugins.common.ConfigurationPropertyValidator;
-import com.google.cloud.tools.jib.plugins.common.PropertyNames;
-import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +67,6 @@ public class ContainerParameters {
   @Nullable
   @Optional
   public List<String> getEntrypoint() {
-    if (System.getProperty(PropertyNames.CONTAINER_ENTRYPOINT) != null) {
-      return ConfigurationPropertyValidator.parseListProperty(
-          System.getProperty(PropertyNames.CONTAINER_ENTRYPOINT));
-    }
     return entrypoint.getOrNull();
   }
 
@@ -92,10 +85,6 @@ public class ContainerParameters {
   @Input
   @Optional
   public List<String> getJvmFlags() {
-    String jvmFlagsSystemProperty = System.getProperty(PropertyNames.CONTAINER_JVM_FLAGS);
-    if (jvmFlagsSystemProperty != null) {
-      return ConfigurationPropertyValidator.parseListProperty(jvmFlagsSystemProperty);
-    }
     return jvmFlags.getOrElse(Collections.emptyList());
   }
 
@@ -110,10 +99,6 @@ public class ContainerParameters {
   @Input
   @Optional
   public Map<String, String> getEnvironment() {
-    if (System.getProperty(PropertyNames.CONTAINER_ENVIRONMENT) != null) {
-      return ConfigurationPropertyValidator.parseMapProperty(
-          System.getProperty(PropertyNames.CONTAINER_ENVIRONMENT));
-    }
     return environment;
   }
 
@@ -124,10 +109,6 @@ public class ContainerParameters {
   @Input
   @Optional
   public List<String> getExtraClasspath() {
-    if (System.getProperty(PropertyNames.CONTAINER_EXTRA_CLASSPATH) != null) {
-      return ConfigurationPropertyValidator.parseListProperty(
-          System.getProperty(PropertyNames.CONTAINER_EXTRA_CLASSPATH));
-    }
     return extraClasspath;
   }
 
@@ -137,9 +118,6 @@ public class ContainerParameters {
 
   @Input
   public boolean getExpandClasspathDependencies() {
-    if (System.getProperty(PropertyNames.EXPAND_CLASSPATH_DEPENDENCIES) != null) {
-      return Boolean.valueOf(System.getProperty(PropertyNames.EXPAND_CLASSPATH_DEPENDENCIES));
-    }
     return expandClasspathDependencies;
   }
 
@@ -151,10 +129,6 @@ public class ContainerParameters {
   @Nullable
   @Optional
   public String getMainClass() {
-    String mainClassProperty = System.getProperty(PropertyNames.CONTAINER_MAIN_CLASS);
-    if (mainClassProperty != null) {
-      return mainClassProperty;
-    }
     return mainClass.getOrNull();
   }
 
@@ -170,10 +144,6 @@ public class ContainerParameters {
   @Nullable
   @Optional
   public List<String> getArgs() {
-    if (System.getProperty(PropertyNames.CONTAINER_ARGS) != null) {
-      return ConfigurationPropertyValidator.parseListProperty(
-          System.getProperty(PropertyNames.CONTAINER_ARGS));
-    }
     return args;
   }
 
@@ -184,10 +154,7 @@ public class ContainerParameters {
   @Input
   @Optional
   public ImageFormat getFormat() {
-    if (System.getProperty(PropertyNames.CONTAINER_FORMAT) != null) {
-      return ImageFormat.valueOf(System.getProperty(PropertyNames.CONTAINER_FORMAT));
-    }
-    return Preconditions.checkNotNull(format);
+    return format;
   }
 
   public void setFormat(ImageFormat format) {
@@ -201,10 +168,6 @@ public class ContainerParameters {
   @Input
   @Optional
   public List<String> getPorts() {
-    if (System.getProperty(PropertyNames.CONTAINER_PORTS) != null) {
-      return ConfigurationPropertyValidator.parseListProperty(
-          System.getProperty(PropertyNames.CONTAINER_PORTS));
-    }
     return ports;
   }
 
@@ -215,10 +178,6 @@ public class ContainerParameters {
   @Input
   @Optional
   public List<String> getVolumes() {
-    if (System.getProperty(PropertyNames.CONTAINER_VOLUMES) != null) {
-      return ConfigurationPropertyValidator.parseListProperty(
-          System.getProperty(PropertyNames.CONTAINER_VOLUMES));
-    }
     return volumes;
   }
 
@@ -229,23 +188,12 @@ public class ContainerParameters {
   @Input
   @Optional
   public MapProperty<String, String> getLabels() {
-    String labelsProperty = System.getProperty(PropertyNames.CONTAINER_LABELS);
-    if (labelsProperty != null) {
-      Map<String, String> parsedLabels =
-          ConfigurationPropertyValidator.parseMapProperty(labelsProperty);
-      if (!parsedLabels.equals(labels.get())) {
-        labels.set(parsedLabels);
-      }
-    }
     return labels;
   }
 
   @Input
   @Optional
   public String getAppRoot() {
-    if (System.getProperty(PropertyNames.CONTAINER_APP_ROOT) != null) {
-      return System.getProperty(PropertyNames.CONTAINER_APP_ROOT);
-    }
     return appRoot;
   }
 
@@ -257,9 +205,6 @@ public class ContainerParameters {
   @Nullable
   @Optional
   public String getUser() {
-    if (System.getProperty(PropertyNames.CONTAINER_USER) != null) {
-      return System.getProperty(PropertyNames.CONTAINER_USER);
-    }
     return user;
   }
 
@@ -271,9 +216,6 @@ public class ContainerParameters {
   @Nullable
   @Optional
   public String getWorkingDirectory() {
-    if (System.getProperty(PropertyNames.CONTAINER_WORKING_DIRECTORY) != null) {
-      return System.getProperty(PropertyNames.CONTAINER_WORKING_DIRECTORY);
-    }
     return workingDirectory;
   }
 
@@ -284,20 +226,12 @@ public class ContainerParameters {
   @Input
   @Optional
   public Property<String> getFilesModificationTime() {
-    String property = System.getProperty(PropertyNames.CONTAINER_FILES_MODIFICATION_TIME);
-    if (property != null && !property.equals(filesModificationTime.get())) {
-      filesModificationTime.set(property);
-    }
     return filesModificationTime;
   }
 
   @Input
   @Optional
   public Property<String> getCreationTime() {
-    String property = System.getProperty(PropertyNames.CONTAINER_CREATION_TIME);
-    if (property != null && !property.equals(creationTime.get())) {
-      creationTime.set(property);
-    }
     return creationTime;
   }
 }

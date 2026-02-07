@@ -18,6 +18,8 @@ repositories {
 
 dependencies {
   implementation("com.google.cloud.tools:jib-core:0.28.1")
+  implementation("com.google.guava:guava:32.1.2-jre")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.21.0")
 }
 
 gradlePlugin {

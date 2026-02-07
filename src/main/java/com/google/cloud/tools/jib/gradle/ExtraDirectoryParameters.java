@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.plugins.common.RawConfiguration.ExtraDirectoriesConfiguration;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -30,7 +29,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 
 /** Configuration of an extra directory. */
-public class ExtraDirectoryParameters implements ExtraDirectoriesConfiguration {
+public class ExtraDirectoryParameters {
 
   private Project project;
   private Property<Path> from;
@@ -60,7 +59,6 @@ public class ExtraDirectoryParameters implements ExtraDirectoriesConfiguration {
     return from.get().toString();
   }
 
-  @Override
   @Internal
   public Path getFrom() {
     return from.get();
@@ -74,7 +72,6 @@ public class ExtraDirectoryParameters implements ExtraDirectoriesConfiguration {
     this.from.set(from.map(obj -> project.file(obj).toPath()));
   }
 
-  @Override
   @Input
   public String getInto() {
     return into.get();
@@ -98,13 +95,11 @@ public class ExtraDirectoryParameters implements ExtraDirectoriesConfiguration {
     return excludes;
   }
 
-  @Override
   @Internal
   public List<String> getIncludesList() {
     return includes.get();
   }
 
-  @Override
   @Internal
   public List<String> getExcludesList() {
     return excludes.get();

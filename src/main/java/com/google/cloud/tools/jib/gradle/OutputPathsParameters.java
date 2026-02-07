@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.plugins.common.PropertyNames;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.inject.Inject;
@@ -37,20 +36,20 @@ public class OutputPathsParameters {
   @Inject
   public OutputPathsParameters(Project project) {
     this.project = project;
-    digest = project.getBuildDir().toPath().resolve("jib-image.digest");
-    imageId = project.getBuildDir().toPath().resolve("jib-image.id");
-    imageJson = project.getBuildDir().toPath().resolve("jib-image.json");
-    tar = project.getBuildDir().toPath().resolve("jib-image.tar");
+    digest = project.getLayout().getBuildDirectory().get().getAsFile().toPath().resolve("jib-image.digest");
+    imageId = project.getLayout().getBuildDirectory().get().getAsFile().toPath().resolve("jib-image.id");
+    imageJson = project.getLayout().getBuildDirectory().get().getAsFile().toPath().resolve("jib-image.json");
+    tar = project.getLayout().getBuildDirectory().get().getAsFile().toPath().resolve("jib-image.tar");
   }
 
   @Input
   public String getDigest() {
-    return getRelativeToProjectRoot(digest, PropertyNames.OUTPUT_PATHS_DIGEST).toString();
+    return getRelativeToProjectRoot(digest).toString();
   }
 
   @Internal
   Path getDigestPath() {
-    return getRelativeToProjectRoot(digest, PropertyNames.OUTPUT_PATHS_DIGEST);
+    return getRelativeToProjectRoot(digest);
   }
 
   public void setDigest(String digest) {
@@ -59,12 +58,12 @@ public class OutputPathsParameters {
 
   @Input
   public String getImageId() {
-    return getRelativeToProjectRoot(imageId, PropertyNames.OUTPUT_PATHS_IMAGE_ID).toString();
+    return getRelativeToProjectRoot(imageId).toString();
   }
 
   @Internal
   Path getImageIdPath() {
-    return getRelativeToProjectRoot(imageId, PropertyNames.OUTPUT_PATHS_IMAGE_ID);
+    return getRelativeToProjectRoot(imageId);
   }
 
   public void setImageId(String id) {
@@ -73,12 +72,12 @@ public class OutputPathsParameters {
 
   @Input
   public String getImageJson() {
-    return getRelativeToProjectRoot(imageJson, PropertyNames.OUTPUT_PATHS_IMAGE_JSON).toString();
+    return getRelativeToProjectRoot(imageJson).toString();
   }
 
   @Internal
   Path getImageJsonPath() {
-    return getRelativeToProjectRoot(imageJson, PropertyNames.OUTPUT_PATHS_IMAGE_JSON);
+    return getRelativeToProjectRoot(imageJson);
   }
 
   public void setImageJson(String imageJson) {
@@ -87,21 +86,19 @@ public class OutputPathsParameters {
 
   @Input
   public String getTar() {
-    return getRelativeToProjectRoot(tar, PropertyNames.OUTPUT_PATHS_TAR).toString();
+    return getRelativeToProjectRoot(tar).toString();
   }
 
   @Internal
   Path getTarPath() {
-    return getRelativeToProjectRoot(tar, PropertyNames.OUTPUT_PATHS_TAR);
+    return getRelativeToProjectRoot(tar);
   }
 
   public void setTar(String tar) {
     this.tar = Paths.get(tar);
   }
 
-  private Path getRelativeToProjectRoot(Path configuration, String propertyName) {
-    String property = System.getProperty(propertyName);
-    Path path = property != null ? Paths.get(property) : configuration;
-    return path.isAbsolute() ? path : project.getProjectDir().toPath().resolve(path);
+  private Path getRelativeToProjectRoot(Path configuration) {
+      return configuration.isAbsolute() ? configuration : project.getProjectDir().toPath().resolve(configuration);
   }
 }

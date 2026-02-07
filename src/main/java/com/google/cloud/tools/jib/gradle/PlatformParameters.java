@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.plugins.common.RawConfiguration.PlatformConfiguration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -26,7 +25,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 
 /** Configuration of a platform. */
-public class PlatformParameters implements PlatformConfiguration {
+public class PlatformParameters {
 
   static PlatformParameters of(String osArchitecture) {
     Matcher matcher = Pattern.compile("([^/ ]+)/([^/ ]+)").matcher(osArchitecture);
@@ -49,7 +48,6 @@ public class PlatformParameters implements PlatformConfiguration {
   }
 
   @Internal
-  @Override
   public Optional<String> getOsName() {
     return Optional.ofNullable(os);
   }
@@ -65,7 +63,6 @@ public class PlatformParameters implements PlatformConfiguration {
   }
 
   @Internal
-  @Override
   public Optional<String> getArchitectureName() {
     return Optional.ofNullable(architecture);
   }

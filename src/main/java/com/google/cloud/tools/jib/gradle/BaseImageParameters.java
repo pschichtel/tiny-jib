@@ -16,10 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.plugins.common.ConfigurationPropertyValidator;
-import com.google.cloud.tools.jib.plugins.common.PropertyNames;
-import java.util.List;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import org.gradle.api.Action;
@@ -46,8 +42,7 @@ public class BaseImageParameters {
     platforms = objectFactory.listProperty(PlatformParameters.class);
     image = objectFactory.property(String.class);
     platformParametersSpec = objectFactory.newInstance(PlatformParametersSpec.class, platforms);
-    credHelper =
-        objectFactory.newInstance(CredHelperParameters.class, PropertyNames.FROM_CRED_HELPER);
+    credHelper = objectFactory.newInstance(CredHelperParameters.class);
 
     PlatformParameters amd64Linux = new PlatformParameters();
     amd64Linux.setArchitecture("amd64");
@@ -58,16 +53,6 @@ public class BaseImageParameters {
   @Nested
   @Optional
   public ListProperty<PlatformParameters> getPlatforms() {
-    String property = System.getProperty(PropertyNames.FROM_PLATFORMS);
-    if (property != null) {
-      List<PlatformParameters> parsed =
-          ConfigurationPropertyValidator.parseListProperty(property).stream()
-              .map(PlatformParameters::of)
-              .collect(Collectors.toList());
-      if (!parsed.equals(platforms.get())) {
-        platforms.set(parsed);
-      }
-    }
     return platforms;
   }
 
@@ -80,9 +65,6 @@ public class BaseImageParameters {
   @Nullable
   @Optional
   public String getImage() {
-    if (System.getProperty(PropertyNames.FROM_IMAGE) != null) {
-      return System.getProperty(PropertyNames.FROM_IMAGE);
-    }
     return image.getOrNull();
   }
 

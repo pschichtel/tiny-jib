@@ -16,13 +16,9 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.plugins.common.ConfigurationPropertyValidator;
-import com.google.cloud.tools.jib.plugins.common.PropertyNames;
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
@@ -71,13 +67,6 @@ public class ExtraDirectoriesParameters {
   public List<ExtraDirectoryParameters> getPaths() {
     // Gradle warns about @Input annotations on File objects, so we have to expose a getter for a
     // String to make them go away.
-    String property = System.getProperty(PropertyNames.EXTRA_DIRECTORIES_PATHS);
-    if (property != null) {
-      List<String> pathStrings = ConfigurationPropertyValidator.parseListProperty(property);
-      return pathStrings.stream()
-          .map(path -> new ExtraDirectoryParameters(objects, project, Paths.get(path), "/"))
-          .collect(Collectors.toList());
-    }
     if (paths.get().isEmpty()) {
       return Collections.singletonList(
           new ExtraDirectoryParameters(
@@ -129,14 +118,6 @@ public class ExtraDirectoriesParameters {
    */
   @Input
   public MapProperty<String, String> getPermissions() {
-    String property = System.getProperty(PropertyNames.EXTRA_DIRECTORIES_PERMISSIONS);
-    if (property != null) {
-      Map<String, String> parsedPermissions =
-          ConfigurationPropertyValidator.parseMapProperty(property);
-      if (!parsedPermissions.equals(permissions.get())) {
-        permissions.set(parsedPermissions);
-      }
-    }
     return permissions;
   }
 }

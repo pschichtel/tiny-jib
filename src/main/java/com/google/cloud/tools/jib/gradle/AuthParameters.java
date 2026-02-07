@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.plugins.common.AuthProperty;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import org.gradle.api.model.ObjectFactory;
@@ -30,7 +29,7 @@ import org.gradle.api.tasks.Optional;
  * A bean that configures authorization credentials to be used for a registry. This is configurable
  * with Groovy closures and can be validated when used as a task input.
  */
-public class AuthParameters implements AuthProperty {
+public class AuthParameters {
 
   private Property<String> username;
   private Property<String> password;
@@ -45,7 +44,6 @@ public class AuthParameters implements AuthProperty {
 
   @Input
   @Optional
-  @Override
   @Nullable
   public String getUsername() {
     return username.getOrNull();
@@ -61,7 +59,6 @@ public class AuthParameters implements AuthProperty {
 
   @Input
   @Optional
-  @Override
   @Nullable
   public String getPassword() {
     return password.getOrNull();
@@ -76,19 +73,16 @@ public class AuthParameters implements AuthProperty {
   }
 
   @Internal
-  @Override
   public String getAuthDescriptor() {
     return source;
   }
 
   @Internal
-  @Override
   public String getUsernameDescriptor() {
     return getAuthDescriptor() + ".username";
   }
 
   @Internal
-  @Override
   public String getPasswordDescriptor() {
     return getAuthDescriptor() + ".password";
   }

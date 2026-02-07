@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.plugins.common.RawConfiguration.CredHelperConfiguration;
 import java.util.Map;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -28,14 +27,12 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 
 /** Configuration for a credential helper. */
-public class CredHelperParameters implements CredHelperConfiguration {
-  private final String propertyName;
+public class CredHelperParameters {
   private final MapProperty<String, String> environment;
   @Nullable private String helper;
 
   @Inject
-  public CredHelperParameters(ObjectFactory objectFactory, String propertyName) {
-    this.propertyName = propertyName;
+  public CredHelperParameters(ObjectFactory objectFactory) {
     environment = objectFactory.mapProperty(String.class, String.class).empty();
   }
 
@@ -43,14 +40,10 @@ public class CredHelperParameters implements CredHelperConfiguration {
   @Nullable
   @Optional
   public String getHelper() {
-    if (System.getProperty(propertyName) != null) {
-      return System.getProperty(propertyName);
-    }
     return helper;
   }
 
   @Internal
-  @Override
   public java.util.Optional<String> getHelperName() {
     return java.util.Optional.ofNullable(getHelper());
   }
@@ -59,7 +52,6 @@ public class CredHelperParameters implements CredHelperConfiguration {
     this.helper = helper;
   }
 
-  @Override
   @Input
   @Optional
   public Map<String, String> getEnvironment() {

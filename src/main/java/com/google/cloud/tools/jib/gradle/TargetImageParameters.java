@@ -16,9 +16,6 @@
 
 package com.google.cloud.tools.jib.gradle;
 
-import com.google.cloud.tools.jib.plugins.common.ConfigurationPropertyValidator;
-import com.google.cloud.tools.jib.plugins.common.PropertyNames;
-import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -45,8 +42,7 @@ public class TargetImageParameters {
     auth = objectFactory.newInstance(AuthParameters.class, "to.auth");
     image = objectFactory.property(String.class);
     tags = objectFactory.setProperty(String.class).empty();
-    credHelper =
-        objectFactory.newInstance(CredHelperParameters.class, PropertyNames.TO_CRED_HELPER);
+    credHelper = objectFactory.newInstance(CredHelperParameters.class);
   }
 
   @Input
@@ -67,16 +63,11 @@ public class TargetImageParameters {
   @Input
   @Optional
   public Set<String> getTags() {
-    String property = System.getProperty(PropertyNames.TO_TAGS);
     Set<String> tagsValue;
-    if (property != null) {
-      tagsValue = ImmutableSet.copyOf(ConfigurationPropertyValidator.parseListProperty(property));
-    } else {
-      try {
-        tagsValue = tags.get();
-      } catch (NullPointerException ex) {
-        throw new IllegalArgumentException("jib.to.tags contains null tag");
-      }
+    try {
+      tagsValue = tags.get();
+    } catch (NullPointerException ex) {
+      throw new IllegalArgumentException("jib.to.tags contains null tag");
     }
     if (tagsValue.stream().anyMatch(str -> str.isEmpty())) {
       throw new IllegalArgumentException("jib.to.tags contains empty tag");
