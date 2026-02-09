@@ -11,17 +11,17 @@ import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
-class BaseImageParameters @Inject constructor(objectFactory: ObjectFactory) {
+class BaseImageParameters @Inject constructor(objectFactory: ObjectFactory) : ImageParams {
     @get:Optional
     @get:Nested
-    val auth: AuthParameters = objectFactory.newInstance()
+    override val auth: AuthParameters = objectFactory.newInstance()
 
     @Input
     val image: Property<String> = objectFactory.property()
 
     @get:Optional
     @get:Nested
-    val credHelper: CredHelperParameters = objectFactory.newInstance()
+    override val credHelper: CredHelperParameters = objectFactory.newInstance()
 
     @get:Optional
     @get:Nested

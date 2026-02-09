@@ -7,17 +7,17 @@ import tel.schich.tinyjib.TinyJibExtension
 import tel.schich.tinyjib.TinyJibTask
 
 abstract class TinyJibPublishTask(extension: TinyJibExtension) : TinyJibTask(extension) {
-
     @TaskAction
     fun performAction() {
         val builder = setupBuilder()
 
-        val targetImage = RegistryImage.named(targetImageName())
+        val imageRef = targetImageName()
+        val targetImage = RegistryImage.named(imageRef)
+        configureCredentialRetrievers(imageRef, targetImage, extension.to)
         val containerizer = Containerizer.to(targetImage)
         buildImage(
             builder,
             containerizer,
         )
     }
-
 }

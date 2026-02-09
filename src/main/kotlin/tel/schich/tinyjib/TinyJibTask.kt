@@ -34,8 +34,8 @@ import tel.schich.tinyjib.jib.addConfigBasedRetrievers
 import tel.schich.tinyjib.jib.configureEntrypoint
 import tel.schich.tinyjib.jib.configureExtraDirectoryLayers
 import tel.schich.tinyjib.jib.getCredentials
+import tel.schich.tinyjib.params.ImageParams
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -123,7 +123,7 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
 
         val credHelper = from.credHelper
         val baseImage = RegistryImage.named(imageReference)
-        configureCredentialRetrievers(imageReference, baseImage, from.auth, credHelper)
+        configureCredentialRetrievers(imageReference, baseImage, from)
 
         val credHelperFactory = CredentialRetrieverFactory.forImage(imageReference, logAdapter, credHelper.environment.get())
         getCredentials(from.auth)?.let {
@@ -273,15 +273,13 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
         return jibContainer
     }
 
-    private fun configureCredentialRetrievers(imageRef: ImageReference, image: RegistryImage, authParams: AuthParameters?, credHelperParams: CredHelperParameters) {
-        val credHelperEnv = credHelperParams.environment.orNull.orEmpty()
+    protected fun configureCredentialRetrievers(imageRef: ImageReference, image: RegistryImage, imageParams: ImageParams) {
+        val credHelperEnv = imageParams.credHelper.environment.orNull.orEmpty()
         val credHelperFactory = CredentialRetrieverFactory.forImage(imageRef, logAdapter, credHelperEnv)
-        if (authParams != null) {
-            getCredentials(authParams)?.let {
-                image.addCredentialRetriever(credHelperFactory.known(it, "tiny-jib"))
-            }
+        getCredentials(imageParams.auth)?.let {
+            image.addCredentialRetriever(credHelperFactory.known(it, "tiny-jib"))
         }
-        credHelperParams.helper.orNull?.let { helperName ->
+        imageParams.credHelper.helper.orNull?.let { helperName ->
             val helperBinaryPath = Paths.get(helperName)
             if (Files.isExecutable(helperBinaryPath)) {
                 image.addCredentialRetriever(credHelperFactory.dockerCredentialHelper(helperBinaryPath))
