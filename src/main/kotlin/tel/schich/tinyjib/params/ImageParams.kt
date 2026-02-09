@@ -13,4 +13,7 @@ abstract class ImageParams(objectFactory: ObjectFactory) {
     @get:Optional
     @get:Nested
     val credHelper: CredHelperParameters = objectFactory.newInstance()
+
+    fun <T> auth(block: AuthParameters.() -> T): T = auth.block()
+    fun <T> credHelper(block: CredHelperParameters.() -> T): T = credHelper.block()
 }

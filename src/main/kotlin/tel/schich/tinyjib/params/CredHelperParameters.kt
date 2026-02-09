@@ -10,9 +10,11 @@ import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 abstract class CredHelperParameters @Inject constructor(objectFactory: ObjectFactory) {
+    @Optional
+    @Input
     val environment: MapProperty<String, String> = objectFactory.mapProperty()
 
-    @get:Optional
-    @get:Input
+    @Optional
+    @Input
     val helper: Property<String> = objectFactory.property()
 }

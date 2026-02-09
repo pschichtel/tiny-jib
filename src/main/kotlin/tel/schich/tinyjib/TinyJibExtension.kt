@@ -7,19 +7,14 @@ import tel.schich.tinyjib.params.ExtraDirectoriesParameters
 import tel.schich.tinyjib.params.OutputPathsParameters
 import tel.schich.tinyjib.params.TargetImageParameters
 import org.gradle.api.Project
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.newInstance
+import org.gradle.kotlin.dsl.property
 
 const val DEFAULT_ALLOW_INSECURE_REGISTRIES: Boolean = false
-
-private fun getSourceSet(project: Project, name: String): Provider<SourceSet> {
-    return project.provider { project.extensions.getByType(SourceSetContainer::class.java).getByName(name) }
-}
 
 abstract class TinyJibExtension(project: Project) {
     @Nested
@@ -35,13 +30,25 @@ abstract class TinyJibExtension(project: Project) {
     @Nested
     val outputPaths: OutputPathsParameters = project.objects.newInstance(project)
 
-    val allowInsecureRegistries: Property<Boolean> = project.objects.property(Boolean::class.java)
-    val configurationName: Property<String> = project.objects.property(String::class.java)
-    val sourceSet: Property<SourceSet> = project.objects.property(SourceSet::class.java)
+    @Input
+    val allowInsecureRegistries: Property<Boolean> = project.objects.property()
+
+    @Input
+    @Optional
+    val configurationName: Property<String> = project.objects.property()
+
+    @Input
+    val sourceSetName: Property<String> = project.objects.property()
 
     init {
         allowInsecureRegistries.convention(DEFAULT_ALLOW_INSECURE_REGISTRIES)
-        configurationName.convention(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
-        sourceSet.convention(getSourceSet(project, "main"))
+        sourceSetName.convention("main")
     }
+
+    fun <T> from(block: BaseImageParameters.() -> T): T = from.block()
+    fun <T> to(block: TargetImageParameters.() -> T): T = to.block()
+    fun <T> container(block: ContainerParameters.() -> T): T = container.block()
+    fun <T> extraDirectories(block: ExtraDirectoriesParameters.() -> T): T = extraDirectories.block()
+    fun <T> dockerClient(block: DockerClientParameters.() -> T): T = dockerClient.block()
+    fun <T> outputPaths(block: OutputPathsParameters.() -> T): T = outputPaths.block()
 }

@@ -9,10 +9,13 @@ import org.gradle.kotlin.dsl.setProperty
 import javax.inject.Inject
 
 abstract class TargetImageParameters @Inject constructor(objectFactory: ObjectFactory) : ImageParams(objectFactory) {
-
     @Input
     val image: Property<String> = objectFactory.property()
 
-    @Inject
+    @Input
     val tags: SetProperty<String> = objectFactory.setProperty()
+
+    init {
+        tags.convention(emptyList())
+    }
 }

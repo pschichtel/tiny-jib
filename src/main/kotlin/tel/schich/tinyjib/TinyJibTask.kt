@@ -15,9 +15,8 @@ import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath
 import com.google.cloud.tools.jib.api.buildplan.ImageFormat
 import com.google.cloud.tools.jib.api.buildplan.Platform
 import com.google.cloud.tools.jib.frontend.CredentialRetrieverFactory
-import tel.schich.tinyjib.params.AuthParameters
-import tel.schich.tinyjib.params.CredHelperParameters
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.DirectoryProperty
@@ -26,8 +25,10 @@ import org.gradle.api.provider.Property
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.kotlin.dsl.property
 import tel.schich.tinyjib.jib.SimpleModificationTimeProvider
 import tel.schich.tinyjib.jib.addConfigBasedRetrievers
@@ -41,7 +42,25 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.util.function.Consumer
+import kotlin.Boolean
+import kotlin.String
+import kotlin.apply
+import kotlin.collections.List
+import kotlin.collections.asSequence
+import kotlin.collections.filterIsInstance
+import kotlin.collections.last
+import kotlin.collections.map
+import kotlin.collections.mapNotNull
 import kotlin.collections.orEmpty
+import kotlin.collections.toSet
+import kotlin.let
+import kotlin.sequences.filter
+import kotlin.sequences.map
+import kotlin.sequences.toList
+import kotlin.text.contains
+import kotlin.text.encodeToByteArray
+import kotlin.text.endsWith
+import kotlin.text.lowercase
 
 private val creationTimeFormatter = DateTimeFormatterBuilder()
     .append(DateTimeFormatter.ISO_DATE_TIME) // parses isoStrict
@@ -71,7 +90,7 @@ const val OUTPUT_DIRECTORY_NAME = "tiny-jib"
 const val CACHE_DIRECTORY_NAME = "$OUTPUT_DIRECTORY_NAME-cache"
 
 @CacheableTask
-abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
+abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTask() {
     private val logAdapter = Consumer<LogEvent> {
         when (it.level) {
             LogEvent.Level.ERROR -> logger.error(it.message)
@@ -91,17 +110,11 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
 
     @Input
     val offlineMode: Property<Boolean> = project.objects.property()
-    @Input
-    val configurationName: Property<String> = project.objects.property()
-    @Input
-    val sourceSet: Property<SourceSet> = project.objects.property()
 
     init {
         outputDir.convention(project.layout.buildDirectory.dir(OUTPUT_DIRECTORY_NAME))
         cacheDir.convention(project.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME))
         offlineMode.convention(project.gradle.startParameter.isOffline)
-        configurationName.convention(extension.configurationName)
-        sourceSet.convention(extension.sourceSet)
     }
 
     private fun setupJavaBuilder(): JavaContainerBuilder {
@@ -133,13 +146,8 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
         return JavaContainerBuilder.from(baseImage)
     }
 
-    private fun JavaContainerBuilder.configureDependencies(): JavaContainerBuilder {
-        val configurationName = configurationName.get()
-        val sourceSet: SourceSet = sourceSet.get()
-
-        // TODO this is not Configuration Cache safe
-
-        val projectDependencies: FileCollection = project.configurations.getByName(configurationName)
+    private fun JavaContainerBuilder.configureDependencies(sourceSet: SourceSet, configuration: Configuration): JavaContainerBuilder {
+        val projectDependencies: FileCollection = configuration
                 .resolvedConfiguration
                 .resolvedArtifacts
                 .filterIsInstance<ResolvedArtifact>()
@@ -155,8 +163,7 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
             .filter(Spec { obj -> obj.exists() })
 
         val resourcesOutputDirectory = sourceSet.output.resourcesDir?.toPath()
-        val allFiles =
-            project.configurations.getByName(configurationName)
+        val allFiles = configuration
                 .filter(Spec { obj -> obj.exists() })
 
         val nonProjectDependencies = allFiles
@@ -191,10 +198,18 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
             SimpleModificationTimeProvider(container.filesModificationTime.get())
         val appRoot = container.appRoot.get()
 
+        // TODO this is not Configuration Cache safe
+        val sourceSet: SourceSet = extension.sourceSetName.map {
+            project.extensions.getByType(SourceSetContainer::class.java).getByName(it)
+        }.get()
+        val configurationName = extension.configurationName
+            .getOrElse(sourceSet.runtimeClasspathConfigurationName)
+        val configuration = project.configurations.getByName(configurationName)
+
         val javaContainerBuilder = setupJavaBuilder()
             .setAppRoot(appRoot)
             .setModificationTimeProvider(modificationTimeProvider)
-            .configureDependencies()
+            .configureDependencies(sourceSet, configuration)
 
         val platforms = from.platforms.get().orEmpty().mapNotNull {
             val architecture = it.architecture.orNull ?: return@mapNotNull null
@@ -205,7 +220,7 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
             AbsoluteUnixPath.get(it)
         }.toSet()
 
-        val dependencies = project.configurations.getByName(configurationName.get())
+        val dependencies = configuration
             .asSequence()
             .filter { it.exists() && it.isFile() && it.getName().lowercase().endsWith(".jar") }
             .map { it.toPath() }
@@ -213,7 +228,9 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
 
         return javaContainerBuilder.toContainerBuilder().apply {
             setFormat(ImageFormat.OCI)
-            setPlatforms(platforms)
+            if (platforms.isNotEmpty()) {
+                setPlatforms(platforms)
+            }
             configureEntrypoint(
                 cacheDir.asFile.get().toPath(),
                 appRoot,
@@ -295,7 +312,6 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
     }
 
     protected fun targetImageName(): ImageReference {
-        val to = extension.to
-        return ImageReference.parse(to.image.get() + ":" + to.tags.get().first())
+        return ImageReference.parse(extension.to.image.get())
     }
 }
