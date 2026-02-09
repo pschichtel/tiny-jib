@@ -19,8 +19,8 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.CacheableTask
@@ -108,9 +108,36 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     @Input
     val offlineMode: Property<Boolean> = project.objects.property()
 
+    private val sourceSet: Property<SourceSet> = project.objects.property()
+    private val configuration: Property<Configuration> = project.objects.property()
+    private val projectDependencies: ConfigurableFileCollection = project.objects.fileCollection()
+
     init {
         cacheDir.convention(project.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME))
         offlineMode.convention(project.gradle.startParameter.isOffline)
+
+        sourceSet.value(extension.sourceSetName.map { project.extensions.getByType(SourceSetContainer::class.java).getByName(it) })
+        configuration.value(sourceSet.map { sourceSet ->
+            val configurationName = extension.configurationName
+                .getOrElse(sourceSet.runtimeClasspathConfigurationName)
+            project.configurations.getByName(configurationName)
+        })
+
+        projectDependencies.from(configuration.map { configuration ->
+            configuration
+                .resolvedConfiguration
+                .resolvedArtifacts
+                .filterIsInstance<ResolvedArtifact>()
+                .asSequence()
+                .filter {
+                    it.id.componentIdentifier is ProjectComponentIdentifier
+                }
+                .map { it.file }
+                .toList()
+        })
+
+        inputs.files(sourceSet.map { it.runtimeClasspath })
+        inputs.files(sourceSet.map { it.output })
     }
 
     private fun setupJavaBuilder(): JavaContainerBuilder {
@@ -142,18 +169,9 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
         return JavaContainerBuilder.from(baseImage)
     }
 
-    private fun JavaContainerBuilder.configureDependencies(sourceSet: SourceSet, configuration: Configuration): JavaContainerBuilder {
-        val projectDependencies: FileCollection = configuration
-                .resolvedConfiguration
-                .resolvedArtifacts
-                .filterIsInstance<ResolvedArtifact>()
-                .asSequence()
-                .filter {
-                    it.id.componentIdentifier is ProjectComponentIdentifier
-                }
-                .map { it.file }
-                .toList()
-                .let { project.files(it) }
+    private fun JavaContainerBuilder.configureDependencies(): JavaContainerBuilder {
+        val configuration = configuration.get()
+        val sourceSet = sourceSet.get()
 
         val classesOutputDirectories = sourceSet.output.classesDirs
             .filter(Spec { obj -> obj.exists() })
@@ -194,18 +212,10 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             SimpleModificationTimeProvider(container.filesModificationTime.get())
         val appRoot = container.appRoot.get()
 
-        // TODO this is not Configuration Cache safe
-        val sourceSet: SourceSet = extension.sourceSetName.map {
-            project.extensions.getByType(SourceSetContainer::class.java).getByName(it)
-        }.get()
-        val configurationName = extension.configurationName
-            .getOrElse(sourceSet.runtimeClasspathConfigurationName)
-        val configuration = project.configurations.getByName(configurationName)
-
         val javaContainerBuilder = setupJavaBuilder()
             .setAppRoot(appRoot)
             .setModificationTimeProvider(modificationTimeProvider)
-            .configureDependencies(sourceSet, configuration)
+            .configureDependencies()
 
         val platforms = from.platforms.get().orEmpty().mapNotNull {
             val architecture = it.architecture.orNull ?: return@mapNotNull null
@@ -216,7 +226,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             AbsoluteUnixPath.get(it)
         }.toSet()
 
-        val dependencies = configuration
+        val dependencies = configuration.get()
             .asSequence()
             .filter { it.exists() && it.isFile() && it.getName().lowercase().endsWith(".jar") }
             .map { it.toPath() }

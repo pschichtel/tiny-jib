@@ -26,6 +26,6 @@ including a justification why you think it is reasonable to include that particu
 
 ## Actual Features
 
-* Support for Gradle's Configuration Caching (TODO)
+* Support for Gradle's Configuration Caching
 * Support for Gradle's Task Caching
 * Support for source sets other than `main` (e.g., for Kotlin Multiplatform projects)
