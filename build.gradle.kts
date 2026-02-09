@@ -36,3 +36,9 @@ gradlePlugin {
     }
   }
 }
+
+tasks.jar {
+  manifest {
+    attributes("Implementation-Version" to version.toString())
+  }
+}
