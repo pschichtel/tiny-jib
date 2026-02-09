@@ -56,7 +56,7 @@ fun JibContainerBuilder.configureEntrypoint(
     jvmFlags: List<String>,
     dependencies: List<Path>,
     extraClasspath: List<String>,
-): List<String>? {
+) {
     val appRoot = AbsoluteUnixPath.get(appRoot)
     val classpath = mutableListOf<String>()
     classpath.addAll(extraClasspath)
@@ -88,7 +88,7 @@ fun JibContainerBuilder.configureEntrypoint(
     val classpathString = classpath.joinToString(":")
     addJvmArgFilesLayer(cacheDir, appRoot, classpathString, mainClass)
 
-    return if (entrypoint != null) {
+    val entrypoint = if (entrypoint != null) {
         if (entrypoint.size == 1 && entrypoint[0] == "INHERIT") {
             null
         } else {
@@ -103,5 +103,6 @@ fun JibContainerBuilder.configureEntrypoint(
             add(mainClass)
         }
     }
+    setEntrypoint(entrypoint)
 
 }
