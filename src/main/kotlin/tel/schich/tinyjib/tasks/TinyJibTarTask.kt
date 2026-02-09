@@ -8,6 +8,11 @@ import tel.schich.tinyjib.TinyJibTask
 import javax.inject.Inject
 
 abstract class TinyJibTarTask @Inject constructor(extension: TinyJibExtension) : TinyJibTask(extension) {
+
+    init {
+        outputs.file(extension.outputPaths.tar)
+    }
+
     @TaskAction
     fun performAction() {
         val targetImage = TarImage.at(extension.outputPaths.tar.get().toPath())

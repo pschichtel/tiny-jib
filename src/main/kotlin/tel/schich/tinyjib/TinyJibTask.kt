@@ -103,18 +103,18 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     }
 
     @OutputDirectory
-    val outputDir: DirectoryProperty = project.objects.directoryProperty()
-
-    @OutputDirectory
     val cacheDir: DirectoryProperty = project.objects.directoryProperty()
 
     @Input
     val offlineMode: Property<Boolean> = project.objects.property()
 
     init {
-        outputDir.convention(project.layout.buildDirectory.dir(OUTPUT_DIRECTORY_NAME))
         cacheDir.convention(project.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME))
         offlineMode.convention(project.gradle.startParameter.isOffline)
+
+        outputs.file(extension.outputPaths.digest)
+        outputs.file(extension.outputPaths.imageId)
+        outputs.file(extension.outputPaths.imageJson)
     }
 
     private fun setupJavaBuilder(): JavaContainerBuilder {
