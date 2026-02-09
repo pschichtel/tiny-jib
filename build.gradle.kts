@@ -29,7 +29,7 @@ gradlePlugin {
   plugins {
     create("tinyJibPlugin") {
       id = "tel.schich.tinyjib"
-      implementationClass = "tel.schich.dockcross.TinyJibPlugin"
+      implementationClass = "tel.schich.tinyjib.TinyJibPlugin"
       displayName = "Tiny Jib Gradle Plugin"
       description = "A heavily simplified version of Google's Jib plugin"
       tags = listOf("container", "jib")

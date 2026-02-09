@@ -10,7 +10,7 @@ import org.gradle.kotlin.dsl.property
 import java.io.File
 import javax.inject.Inject
 
-class ExtraDirectoryParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class ExtraDirectoryParameters @Inject constructor(objectFactory: ObjectFactory) {
     @get:Input
     val from: Property<File> = objectFactory.property()
 

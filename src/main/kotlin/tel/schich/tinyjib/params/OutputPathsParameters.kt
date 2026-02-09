@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 const val OUTPUT_FILE_NAME = "tiny-jib-image"
 
-class OutputPathsParameters @Inject constructor(project: Project) {
+abstract class OutputPathsParameters @Inject constructor(project: Project) {
     @Input
     val digest: Property<File> = project.objects.property()
 

@@ -9,7 +9,7 @@ import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
-class CredHelperParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class CredHelperParameters @Inject constructor(objectFactory: ObjectFactory) {
     val environment: MapProperty<String, String> = objectFactory.mapProperty()
 
     @get:Optional

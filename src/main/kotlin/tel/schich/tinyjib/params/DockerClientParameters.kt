@@ -9,7 +9,7 @@ import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
-class DockerClientParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class DockerClientParameters @Inject constructor(objectFactory: ObjectFactory) {
     @get:Optional
     @get:Input
     val executable: Property<String> = objectFactory.property()

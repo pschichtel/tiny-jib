@@ -21,7 +21,7 @@ private fun getSourceSet(project: Project, name: String): Provider<SourceSet> {
     return project.provider { project.extensions.getByType(SourceSetContainer::class.java).getByName(name) }
 }
 
-class TinyJibExtension(project: Project) {
+abstract class TinyJibExtension(project: Project) {
     @Nested
     val from: BaseImageParameters = project.objects.newInstance()
     @Nested

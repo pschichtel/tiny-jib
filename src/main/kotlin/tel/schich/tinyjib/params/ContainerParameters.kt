@@ -12,7 +12,7 @@ import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
-class ContainerParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class ContainerParameters @Inject constructor(objectFactory: ObjectFactory) {
     @get:Optional
     @get:Input
     val jvmFlags: ListProperty<String> = objectFactory.listProperty()

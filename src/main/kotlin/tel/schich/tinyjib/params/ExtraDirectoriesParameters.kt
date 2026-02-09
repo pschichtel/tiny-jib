@@ -8,7 +8,7 @@ import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.mapProperty
 import javax.inject.Inject
 
-class ExtraDirectoriesParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class ExtraDirectoriesParameters @Inject constructor(objectFactory: ObjectFactory) {
     @get:Input
     val paths: ListProperty<ExtraDirectoryParameters> = objectFactory.listProperty()
 

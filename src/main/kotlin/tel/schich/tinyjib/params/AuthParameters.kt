@@ -7,7 +7,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
-class AuthParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class AuthParameters @Inject constructor(objectFactory: ObjectFactory) {
     @Input
     @Optional
     val username: Property<String> = objectFactory.property()
