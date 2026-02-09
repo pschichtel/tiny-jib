@@ -111,10 +111,6 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     init {
         cacheDir.convention(project.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME))
         offlineMode.convention(project.gradle.startParameter.isOffline)
-
-        outputs.file(extension.outputPaths.digest)
-        outputs.file(extension.outputPaths.imageId)
-        outputs.file(extension.outputPaths.imageJson)
     }
 
     private fun setupJavaBuilder(): JavaContainerBuilder {

@@ -2,7 +2,7 @@ package tel.schich.tinyjib.params
 
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
 import org.gradle.kotlin.dsl.property
 import java.io.File
 import javax.inject.Inject
@@ -10,16 +10,16 @@ import javax.inject.Inject
 const val OUTPUT_FILE_NAME = "tiny-jib-image"
 
 abstract class OutputPathsParameters @Inject constructor(project: Project) {
-    @Input
+    @OutputFile
     val digest: Property<File> = project.objects.property()
 
-    @Input
+    @OutputFile
     val tar: Property<File> = project.objects.property()
 
-    @Input
+    @OutputFile
     val imageId: Property<File> = project.objects.property()
 
-    @Input
+    @OutputFile
     val imageJson: Property<File> = project.objects.property()
 
     init {
