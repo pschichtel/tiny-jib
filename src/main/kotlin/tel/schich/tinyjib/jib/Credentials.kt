@@ -1,17 +1,11 @@
 package tel.schich.tinyjib.jib
 
 import com.google.cloud.tools.jib.api.Credential
-import com.google.cloud.tools.jib.api.ImageReference
 import com.google.cloud.tools.jib.api.RegistryImage
 import com.google.cloud.tools.jib.frontend.CredentialRetrieverFactory
-import com.google.cloud.tools.jib.gradle.AuthParameters
-import com.google.cloud.tools.jib.gradle.CredHelperParameters
-import org.gradle.api.Task
-import tel.schich.tinyjib.jib.adaptLogs
-import java.nio.file.Files
+import tel.schich.tinyjib.params.AuthParameters
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.collections.orEmpty
 
 private val DOCKER_CONFIG_FILE = Paths.get("config.json")
 // for Kubernetes: https://github.com/GoogleContainerTools/jib/issues/2260
@@ -21,18 +15,18 @@ private val LEGACY_DOCKER_CONFIG_FILE = Paths.get(".dockercfg")
 private val XDG_AUTH_FILE = Paths.get("containers").resolve("auth.json")
 
 fun getCredentials(params: AuthParameters): Credential? {
-    val username = params.username
+    val username = params.username.orNull
     if (username.isNullOrBlank()) {
         return null
     }
-    val password = params.password
+    val password = params.password.orNull
     if (password.isNullOrBlank()) {
         return null
     }
     return Credential.from(username, password)
 }
 
-private fun addConfigBasedRetrievers(credRetrieverFactory: CredentialRetrieverFactory, image: RegistryImage) {
+fun addConfigBasedRetrievers(credRetrieverFactory: CredentialRetrieverFactory, image: RegistryImage) {
 
     fun getEnv(name: String): Path? {
         return System.getenv(name)?.ifEmpty { null }?.let(Paths::get)
@@ -74,27 +68,4 @@ private fun addConfigBasedRetrievers(credRetrieverFactory: CredentialRetrieverFa
         }
         image.addCredentialRetriever(retriever)
     }
-}
-
-fun Task.configureCredentialRetrievers(imageRef: ImageReference, image: RegistryImage, authParams: AuthParameters?, credHelperParams: CredHelperParameters?) {
-    val credHelperEnv = credHelperParams?.environment.orEmpty()
-    val credHelperFactory = CredentialRetrieverFactory.forImage(imageRef, adaptLogs(), credHelperEnv)
-    if (authParams != null) {
-        getCredentials(authParams)?.let {
-            image.addCredentialRetriever(credHelperFactory.known(it, authParams.authDescriptor))
-        }
-    }
-    credHelperParams?.helper?.let { helperName ->
-        val helperBinaryPath = Paths.get(helperName)
-        if (Files.isExecutable(helperBinaryPath)) {
-            image.addCredentialRetriever(credHelperFactory.dockerCredentialHelper(helperBinaryPath))
-        } else {
-            image.addCredentialRetriever(credHelperFactory.dockerCredentialHelper("docker-credential-$helperName"))
-        }
-    }
-
-    addConfigBasedRetrievers(credHelperFactory, image)
-
-    image.addCredentialRetriever(credHelperFactory.wellKnownCredentialHelpers())
-    image.addCredentialRetriever(credHelperFactory.googleApplicationDefaultCredentials())
 }

@@ -1,44 +1,88 @@
 package tel.schich.tinyjib
 
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.ImageReference
 import com.google.cloud.tools.jib.api.JavaContainerBuilder
 import com.google.cloud.tools.jib.api.Jib
+import com.google.cloud.tools.jib.api.JibContainer
 import com.google.cloud.tools.jib.api.JibContainerBuilder
+import com.google.cloud.tools.jib.api.LogEvent
 import com.google.cloud.tools.jib.api.Ports
 import com.google.cloud.tools.jib.api.RegistryImage
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath
 import com.google.cloud.tools.jib.api.buildplan.ImageFormat
 import com.google.cloud.tools.jib.api.buildplan.Platform
 import com.google.cloud.tools.jib.frontend.CredentialRetrieverFactory
+import tel.schich.tinyjib.params.AuthParameters
+import tel.schich.tinyjib.params.CredHelperParameters
 import org.gradle.api.DefaultTask
-import org.gradle.api.Task
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.kotlin.dsl.property
 import tel.schich.tinyjib.jib.SimpleModificationTimeProvider
-import tel.schich.tinyjib.jib.adaptLogs
-import tel.schich.tinyjib.jib.configureCredentialRetrievers
+import tel.schich.tinyjib.jib.addConfigBasedRetrievers
 import tel.schich.tinyjib.jib.configureEntrypoint
 import tel.schich.tinyjib.jib.configureExtraDirectoryLayers
 import tel.schich.tinyjib.jib.getCredentials
-import tel.schich.tinyjib.jib.parseCreationTime
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.util.function.Consumer
+import kotlin.collections.orEmpty
 
-const val CACHE_DIRECTORY_NAME = "tiny-jib-cache"
+private val creationTimeFormatter = DateTimeFormatterBuilder()
+    .append(DateTimeFormatter.ISO_DATE_TIME) // parses isoStrict
+    // add ability to parse with no ":" in tz
+    .optionalStart()
+    .appendOffset("+HHmm", "+0000")
+    .optionalEnd()
+    .toFormatter()
+
+fun parseCreationTime(time: String?): Instant = when (time) {
+    null, "EPOCH" -> Instant.EPOCH
+    "USE_CURRENT_TIMESTAMP" -> Instant.now()
+    else -> creationTimeFormatter.parse(time, Instant::from)
+}
+
+private val objectMapper = JsonMapper()
+
+private data class ImageMetadataOutput(
+    val image: String,
+    val imageId: String,
+    val imageDigest: String,
+    val tags: List<String>,
+    val imagePushed: Boolean,
+)
+
+const val OUTPUT_FILE_NAME = "tiny-jib"
+const val OUTPUT_DIRECTORY_NAME = "tiny-jib"
+const val CACHE_DIRECTORY_NAME = "$OUTPUT_DIRECTORY_NAME-cache"
 
 @CacheableTask
 abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
+    private val logAdapter = Consumer<LogEvent> {
+        when (it.level) {
+            LogEvent.Level.ERROR -> logger.error(it.message)
+            LogEvent.Level.WARN -> logger.warn(it.message)
+            LogEvent.Level.LIFECYCLE -> logger.lifecycle(it.message)
+            LogEvent.Level.PROGRESS -> logger.lifecycle(it.message)
+            LogEvent.Level.INFO -> logger.info(it.message)
+            LogEvent.Level.DEBUG -> logger.debug(it.message)
+        }
+    }
 
     @OutputDirectory
     val outputDir: DirectoryProperty = project.objects.directoryProperty()
@@ -47,19 +91,23 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
     val cacheDir: DirectoryProperty = project.objects.directoryProperty()
 
     @Input
-    val configurationName: Property<String> = project.objects.property(String::class.java)
+    val offlineMode: Property<Boolean> = project.objects.property()
     @Input
-    val sourceSet: Property<SourceSet> = project.objects.property(SourceSet::class.java)
+    val configurationName: Property<String> = project.objects.property()
+    @Input
+    val sourceSet: Property<SourceSet> = project.objects.property()
 
     init {
-        outputDir.convention(project.layout.buildDirectory.dir("tiny-jib"))
-        cacheDir.convention(project.layout.buildDirectory.dir("tiny-jib-cache"))
-        sourceSet.convention(getSourceSet("main"))
+        outputDir.convention(project.layout.buildDirectory.dir(OUTPUT_DIRECTORY_NAME))
+        cacheDir.convention(project.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME))
+        offlineMode.convention(project.gradle.startParameter.isOffline)
+        configurationName.convention(extension.configurationName)
+        sourceSet.convention(extension.sourceSet)
     }
 
     private fun setupJavaBuilder(): JavaContainerBuilder {
         val from = extension.getFrom()
-        val imageName = from.image!!
+        val imageName = from.image.get()
         if (imageName.startsWith(Jib.TAR_IMAGE_PREFIX)) {
             return JavaContainerBuilder.from(imageName)
         }
@@ -67,7 +115,7 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
         val imageReference = ImageReference.parse(imageName.split("://", limit = 2).last());
         if (imageName.startsWith(Jib.DOCKER_DAEMON_IMAGE_PREFIX)) {
             val image = DockerDaemonImage.named(imageReference)
-                .setDockerEnvironment(extension.getDockerClient().getEnvironment())
+                .setDockerEnvironment(extension.getDockerClient().environment)
             extension.getDockerClient().executable?.let {
                 image.setDockerExecutable(Paths.get(it))
             }
@@ -78,9 +126,9 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
         val baseImage = RegistryImage.named(imageReference)
         configureCredentialRetrievers(imageReference, baseImage, from.auth, credHelper)
 
-        val credHelperFactory = CredentialRetrieverFactory.forImage(imageReference, adaptLogs(), credHelper?.environment)
+        val credHelperFactory = CredentialRetrieverFactory.forImage(imageReference, logAdapter, credHelper.environment.get())
         getCredentials(from.auth)?.let {
-            credHelperFactory.known(it, from.auth.authDescriptor)
+            credHelperFactory.known(it, "from")
         }
 
         return JavaContainerBuilder.from(baseImage)
@@ -152,8 +200,8 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
             .configureDependencies()
 
         val platforms = from.platforms.get().orEmpty().mapNotNull {
-            val architecture = it.architecture ?: return@mapNotNull null
-            val os = it.os ?: return@mapNotNull null
+            val architecture = it.architecture.orNull ?: return@mapNotNull null
+            val os = it.os.orNull ?: return@mapNotNull null
             Platform(architecture, os)
         }.toSet()
         val volumes = container.volumes.orEmpty().map {
@@ -190,8 +238,59 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
             configureExtraDirectoryLayers(extension, modificationTimeProvider)
         }
     }
-}
 
-private fun Task.getSourceSet(name: String): Provider<SourceSet> {
-    return project.provider { project.extensions.getByType(SourceSetContainer::class.java).getByName(name) }
+    protected fun buildImage(jibContainerBuilder: JibContainerBuilder, containerizer: Containerizer, metadataOutputPath: Path, cachePath: Path): JibContainer {
+        val containerizer = containerizer.setOfflineMode(offlineMode.get())
+            .setToolName("tiny-jib")
+            .setToolVersion(TinyJibPlugin::class.java.`package`.implementationVersion)
+            .setAllowInsecureRegistries(extension.allowInsecureRegistries.get())
+            .setBaseImageLayersCache(cachePath)
+            .setApplicationLayersCache(cachePath)
+        val jibContainer = jibContainerBuilder.containerize(containerizer)
+
+        val imageDigest = jibContainer.digest.toString()
+        Files.write(metadataOutputPath.resolve("$OUTPUT_FILE_NAME.digest"), imageDigest.encodeToByteArray())
+
+        val imageId = jibContainer.imageId.toString()
+        Files.write(metadataOutputPath.resolve("$OUTPUT_FILE_NAME.id"), imageId.encodeToByteArray())
+
+        val metadataOutput = ImageMetadataOutput(
+            image = jibContainer.targetImage.toString(),
+            imageId = jibContainer.imageId.toString(),
+            imageDigest = jibContainer.digest.toString(),
+            tags = jibContainer.tags.map { it.toString() },
+            imagePushed = jibContainer.isImagePushed,
+        )
+        objectMapper.writeValue(metadataOutputPath.resolve("$OUTPUT_FILE_NAME.json").toFile(), metadataOutput)
+
+        return jibContainer
+    }
+
+    private fun configureCredentialRetrievers(imageRef: ImageReference, image: RegistryImage, authParams: AuthParameters?, credHelperParams: CredHelperParameters) {
+        val credHelperEnv = credHelperParams.environment.orNull.orEmpty()
+        val credHelperFactory = CredentialRetrieverFactory.forImage(imageRef, logAdapter, credHelperEnv)
+        if (authParams != null) {
+            getCredentials(authParams)?.let {
+                image.addCredentialRetriever(credHelperFactory.known(it, "tiny-jib"))
+            }
+        }
+        credHelperParams.helper.orNull?.let { helperName ->
+            val helperBinaryPath = Paths.get(helperName)
+            if (Files.isExecutable(helperBinaryPath)) {
+                image.addCredentialRetriever(credHelperFactory.dockerCredentialHelper(helperBinaryPath))
+            } else {
+                image.addCredentialRetriever(credHelperFactory.dockerCredentialHelper("docker-credential-$helperName"))
+            }
+        }
+
+        addConfigBasedRetrievers(credHelperFactory, image)
+
+        image.addCredentialRetriever(credHelperFactory.wellKnownCredentialHelpers())
+        image.addCredentialRetriever(credHelperFactory.googleApplicationDefaultCredentials())
+    }
+
+    protected fun targetImageName(): ImageReference {
+        val to = extension.getTo()
+        return ImageReference.parse(to.image.get() + ":" + to.tags.get().first())
+    }
 }

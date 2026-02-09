@@ -1,21 +1,26 @@
 package tel.schich.tinyjib
 
-import com.google.cloud.tools.jib.gradle.BaseImageParameters
+import tel.schich.tinyjib.params.BaseImageParameters
 import com.google.cloud.tools.jib.gradle.ContainerParameters
 import com.google.cloud.tools.jib.gradle.DockerClientParameters
 import com.google.cloud.tools.jib.gradle.ExtraDirectoriesParameters
 import com.google.cloud.tools.jib.gradle.OutputPathsParameters
-import com.google.cloud.tools.jib.gradle.TargetImageParameters
+import tel.schich.tinyjib.params.TargetImageParameters
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 
 const val DEFAULT_ALLOW_INSECURE_REGISTIRIES: Boolean = false
-const val DEFAULT_CONTAINERIZING_MODE: String = "exploded"
+
+private fun getSourceSet(project: Project, name: String): Provider<SourceSet> {
+    return project.provider { project.extensions.getByType(SourceSetContainer::class.java).getByName(name) }
+}
 
 class TinyJibExtension(project: Project) {
     private val from: BaseImageParameters = project.objects.newInstance(BaseImageParameters::class.java)
@@ -24,8 +29,13 @@ class TinyJibExtension(project: Project) {
     private val extraDirectories: ExtraDirectoriesParameters = project.objects.newInstance(ExtraDirectoriesParameters::class.java, project)
     private val dockerClient: DockerClientParameters = project.objects.newInstance(DockerClientParameters::class.java)
     private val outputPaths: OutputPathsParameters = project.objects.newInstance(OutputPathsParameters::class.java, project)
-    private val allowInsecureRegistries: Property<Boolean> = project.objects.property(Boolean::class.java).convention(DEFAULT_ALLOW_INSECURE_REGISTIRIES)
-    private val configurationName: Property<String> = project.objects.property(String::class.java).convention(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+
+    val allowInsecureRegistries: Property<Boolean> = project.objects.property(Boolean::class.java)
+        .convention(DEFAULT_ALLOW_INSECURE_REGISTIRIES)
+    val configurationName: Property<String> = project.objects.property(String::class.java)
+        .convention(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+    val sourceSet: Property<SourceSet> = project.objects.property(SourceSet::class.java)
+        .convention(getSourceSet(project, "main"))
 
     fun from(action: Action<BaseImageParameters>) {
         action.execute(from)
@@ -49,10 +59,6 @@ class TinyJibExtension(project: Project) {
 
     fun outputPaths(action: Action<OutputPathsParameters>) {
         action.execute(outputPaths)
-    }
-
-    fun setAllowInsecureRegistries(allowInsecureRegistries: Boolean) {
-        this.allowInsecureRegistries.set(allowInsecureRegistries)
     }
 
     @Nested
@@ -89,22 +95,5 @@ class TinyJibExtension(project: Project) {
     @Optional
     fun getOutputPaths(): OutputPathsParameters {
         return outputPaths
-    }
-
-    @Input
-    fun getAllowInsecureRegistries(): Boolean {
-        return allowInsecureRegistries.get()
-    }
-
-    /**
-     * Returns the configurationName property while setting it to the value of the system property if
-     * present.
-     *
-     * @return The configurationName property
-     */
-    @Input
-    @Optional
-    fun getConfigurationName(): Property<String> {
-        return configurationName
     }
 }
