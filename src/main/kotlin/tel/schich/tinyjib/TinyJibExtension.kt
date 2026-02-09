@@ -45,10 +45,10 @@ abstract class TinyJibExtension(project: Project) {
         sourceSetName.convention("main")
     }
 
-    fun <T> from(block: BaseImageParameters.() -> T): T = from.block()
-    fun <T> to(block: TargetImageParameters.() -> T): T = to.block()
-    fun <T> container(block: ContainerParameters.() -> T): T = container.block()
-    fun <T> extraDirectories(block: ExtraDirectoriesParameters.() -> T): T = extraDirectories.block()
-    fun <T> dockerClient(block: DockerClientParameters.() -> T): T = dockerClient.block()
-    fun <T> outputPaths(block: OutputPathsParameters.() -> T): T = outputPaths.block()
+    fun from(block: BaseImageParameters.() -> Unit): Unit = from.block()
+    fun to(block: TargetImageParameters.() -> Unit): Unit = to.block()
+    fun container(block: ContainerParameters.() -> Unit): Unit = container.block()
+    fun extraDirectories(block: ExtraDirectoriesParameters.() -> Unit): Unit = extraDirectories.block()
+    fun dockerClient(block: DockerClientParameters.() -> Unit): Unit = dockerClient.block()
+    fun outputPaths(block: OutputPathsParameters.() -> Unit): Unit = outputPaths.block()
 }
