@@ -16,8 +16,6 @@ abstract class TinyJibDockerTask(extension: TinyJibExtension) : TinyJibTask(exte
         buildImage(
             builder,
             containerizer,
-            outputDir.get().asFile.toPath(),
-            cacheDir.asFile.get().toPath(),
         )
     }
 }

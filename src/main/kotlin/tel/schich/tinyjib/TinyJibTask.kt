@@ -67,7 +67,6 @@ private data class ImageMetadataOutput(
     val imagePushed: Boolean,
 )
 
-const val OUTPUT_FILE_NAME = "tiny-jib"
 const val OUTPUT_DIRECTORY_NAME = "tiny-jib"
 const val CACHE_DIRECTORY_NAME = "$OUTPUT_DIRECTORY_NAME-cache"
 
@@ -106,7 +105,7 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
     }
 
     private fun setupJavaBuilder(): JavaContainerBuilder {
-        val from = extension.getFrom()
+        val from = extension.from
         val imageName = from.image.get()
         if (imageName.startsWith(Jib.TAR_IMAGE_PREFIX)) {
             return JavaContainerBuilder.from(imageName)
@@ -115,8 +114,8 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
         val imageReference = ImageReference.parse(imageName.split("://", limit = 2).last());
         if (imageName.startsWith(Jib.DOCKER_DAEMON_IMAGE_PREFIX)) {
             val image = DockerDaemonImage.named(imageReference)
-                .setDockerEnvironment(extension.getDockerClient().environment)
-            extension.getDockerClient().executable?.let {
+                .setDockerEnvironment(extension.dockerClient.environment.orNull.orEmpty())
+            extension.dockerClient.executable.orNull?.let {
                 image.setDockerExecutable(Paths.get(it))
             }
             return JavaContainerBuilder.from(image)
@@ -186,13 +185,11 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
 
     protected fun setupBuilder(): JibContainerBuilder {
 
-        val from = extension.getFrom()
-        val container = extension.getContainer()
+        val from = extension.from
+        val container = extension.container
         val modificationTimeProvider =
             SimpleModificationTimeProvider(container.filesModificationTime.get())
-        val appRoot = container.getAppRoot()
-            ?.ifEmpty { null }
-            ?: JavaContainerBuilder.DEFAULT_APP_ROOT
+        val appRoot = container.appRoot.get()
 
         val javaContainerBuilder = setupJavaBuilder()
             .setAppRoot(appRoot)
@@ -204,7 +201,7 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
             val os = it.os.orNull ?: return@mapNotNull null
             Platform(architecture, os)
         }.toSet()
-        val volumes = container.volumes.orEmpty().map {
+        val volumes = container.volumes.orNull.orEmpty().map {
             AbsoluteUnixPath.get(it)
         }.toSet()
 
@@ -220,26 +217,36 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
             configureEntrypoint(
                 cacheDir.asFile.get().toPath(),
                 appRoot,
-                container.entrypoint?.ifEmpty { null },
-                container.mainClass!!,
-                container.jvmFlags,
+                container.entrypoint.orNull?.ifEmpty { null },
+                container.mainClass.get(),
+                container.jvmFlags.orNull.orEmpty(),
                 dependencies,
-                container.extraClasspath,
+                container.extraClasspath.orNull.orEmpty(),
             )
-            setProgramArguments(container.args?.ifEmpty { null })
-            setEnvironment(container.environment)
-            setExposedPorts(Ports.parse(container.getPorts()))
+            container.args.orNull?.ifEmpty { null }?.let {
+                setProgramArguments()
+            }
+            setEnvironment(container.environment.orNull.orEmpty())
+            container.ports.orNull?.ifEmpty { null }?.let {
+                setExposedPorts(Ports.parse(it))
+            }
             setVolumes(volumes)
             setLabels(container.labels.get())
-            setUser(container.user)
+            container.user.orNull?.let {
+                setUser(it)
+            }
             setCreationTime(parseCreationTime(container.creationTime.get()))
-            setWorkingDirectory(container.workingDirectory?.let { AbsoluteUnixPath.get(it) })
+            container.workingDirectory.orNull?.let {
+                setWorkingDirectory(AbsoluteUnixPath.get(it))
+            }
 
             configureExtraDirectoryLayers(extension, modificationTimeProvider)
         }
     }
 
-    protected fun buildImage(jibContainerBuilder: JibContainerBuilder, containerizer: Containerizer, metadataOutputPath: Path, cachePath: Path): JibContainer {
+    protected fun buildImage(jibContainerBuilder: JibContainerBuilder, containerizer: Containerizer): JibContainer {
+        val cachePath = cacheDir.asFile.get().toPath()
+
         val containerizer = containerizer.setOfflineMode(offlineMode.get())
             .setToolName("tiny-jib")
             .setToolVersion(TinyJibPlugin::class.java.`package`.implementationVersion)
@@ -249,10 +256,10 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
         val jibContainer = jibContainerBuilder.containerize(containerizer)
 
         val imageDigest = jibContainer.digest.toString()
-        Files.write(metadataOutputPath.resolve("$OUTPUT_FILE_NAME.digest"), imageDigest.encodeToByteArray())
+        Files.write(extension.outputPaths.digest.get().toPath(), imageDigest.encodeToByteArray())
 
         val imageId = jibContainer.imageId.toString()
-        Files.write(metadataOutputPath.resolve("$OUTPUT_FILE_NAME.id"), imageId.encodeToByteArray())
+        Files.write(extension.outputPaths.imageId.get().toPath(), imageId.encodeToByteArray())
 
         val metadataOutput = ImageMetadataOutput(
             image = jibContainer.targetImage.toString(),
@@ -261,7 +268,7 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
             tags = jibContainer.tags.map { it.toString() },
             imagePushed = jibContainer.isImagePushed,
         )
-        objectMapper.writeValue(metadataOutputPath.resolve("$OUTPUT_FILE_NAME.json").toFile(), metadataOutput)
+        objectMapper.writeValue(extension.outputPaths.imageJson.get(), metadataOutput)
 
         return jibContainer
     }
@@ -290,7 +297,7 @@ abstract class TinyJibTask(val extension: TinyJibExtension) : DefaultTask() {
     }
 
     protected fun targetImageName(): ImageReference {
-        val to = extension.getTo()
+        val to = extension.to
         return ImageReference.parse(to.image.get() + ":" + to.tags.get().first())
     }
 }

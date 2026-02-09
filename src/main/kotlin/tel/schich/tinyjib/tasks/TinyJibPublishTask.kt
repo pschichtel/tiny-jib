@@ -17,8 +17,6 @@ abstract class TinyJibPublishTask(extension: TinyJibExtension) : TinyJibTask(ext
         buildImage(
             builder,
             containerizer,
-            outputDir.get().asFile.toPath(),
-            cacheDir.asFile.get().toPath(),
         )
     }
 

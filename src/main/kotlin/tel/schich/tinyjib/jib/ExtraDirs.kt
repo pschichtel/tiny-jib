@@ -95,15 +95,15 @@ private fun extraDirectoryLayerConfiguration(
 }
 
 fun JibContainerBuilder.configureExtraDirectoryLayers(extension: TinyJibExtension, modificationTimeProvider: ModificationTimeProvider) {
-    val extraDirs = extension.getExtraDirectories()
+    val extraDirs = extension.extraDirectories
     val permissions = extraDirs.permissions.get()
         .mapValues { FilePermissions.fromOctalString(it.value) }
-    for (path in extraDirs.paths.orEmpty()) {
-        val from = path.from
+    for (path in extraDirs.paths.orNull.orEmpty()) {
+        val from = path.from.get().toPath()
         if (Files.exists(from)) {
             val layer = extraDirectoryLayerConfiguration(
                 from,
-                AbsoluteUnixPath.get(path.into),
+                AbsoluteUnixPath.get(path.into.get()),
                 path.includes.get(),
                 path.excludes.get(),
                 permissions,
