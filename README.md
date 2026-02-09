@@ -2,6 +2,13 @@
 
 A tiny version of [Google's Jib plugin for Gradle](https://github.com/GoogleContainerTools/jib/tree/master/jib-gradle-plugin).
 
+The primary focus of this project is to provide a small and modern version of the upstream Jib Gradle plugin.
+While it is currently almost a drop-in replacement for many common use-cases, there is no need for it to stay this way.
+This project explicitly does _not_ try to reach feature parity with upstream.
+
+If you are lacking features from upstream, feel free to request them in the [issues](https://github.com/pschichtel/tiny-jib/issues),
+including a justification why you think it is reasonable to include that particular functionality.
+
 ## Features
 
 * No support for build systems other than Gradle
@@ -19,6 +26,6 @@ A tiny version of [Google's Jib plugin for Gradle](https://github.com/GoogleCont
 
 ## Actual Features
 
-* Support for Gradle's Configuration Caching
+* Support for Gradle's Configuration Caching (TODO)
 * Support for Gradle's Task Caching
 * Support for source sets other than `main` (e.g., for Kotlin Multiplatform projects)
