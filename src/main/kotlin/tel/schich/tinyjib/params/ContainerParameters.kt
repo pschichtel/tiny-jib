@@ -30,9 +30,6 @@ abstract class ContainerParameters @Inject constructor(objectFactory: ObjectFact
     val extraClasspath: ListProperty<String> = objectFactory.listProperty()
 
     @get:Input
-    val expandClasspathDependencies: Property<Boolean> = objectFactory.property()
-
-    @get:Input
     val mainClass: Property<String> = objectFactory.property()
 
     @get:Optional
@@ -69,7 +66,6 @@ abstract class ContainerParameters @Inject constructor(objectFactory: ObjectFact
     val creationTime: Property<String> = objectFactory.property<String>()
 
     init {
-        expandClasspathDependencies.convention(true)
         appRoot.convention(JavaContainerBuilder.DEFAULT_APP_ROOT)
         filesModificationTime.convention("EPOCH_PLUS_SECOND")
         creationTime.convention("EPOCH")
