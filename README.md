@@ -9,6 +9,16 @@ This project explicitly does _not_ try to reach feature parity with upstream.
 If you are lacking features from upstream, feel free to request them in the [issues](https://github.com/pschichtel/tiny-jib/issues),
 including a justification why you think it is reasonable to include that particular functionality.
 
+## Usage
+
+```kotlin
+plugins {
+  id("tel.schich.tinyjib") version "0.1.0"
+}
+```
+
+Then run `gradle tinyJibTar`.
+
 ## Features
 
 * No support for build systems other than Gradle
