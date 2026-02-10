@@ -29,3 +29,10 @@ including a justification why you think it is reasonable to include that particu
 * Support for Gradle's Configuration Caching
 * Support for Gradle's Task Caching
 * Support for source sets other than `main` (e.g., for Kotlin Multiplatform projects)
+
+## Documentation
+
+You can either refer [Jib's upstream documentation](https://github.com/GoogleContainerTools/jib/tree/master/jib-gradle-plugin),
+most of its documentation still applies to this plugin.
+
+Additionally, there is a derived version of its documentation [available here](docs.md).
