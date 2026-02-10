@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "tel.schich.tinyjib"
-version = "0.1.0"
+version = "0.1.1"
 
 java.toolchain {
   languageVersion = JavaLanguageVersion.of(8)
