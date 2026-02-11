@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   `java-gradle-plugin`
-  id("com.gradle.plugin-publish") version "1.3.1"
+  alias(libs.plugins.pluginPublish)
 }
 
 group = "tel.schich.tinyjib"
@@ -17,9 +17,9 @@ repositories {
 }
 
 dependencies {
-  implementation("com.google.cloud.tools:jib-core:0.28.1")
-  implementation("com.google.guava:guava:32.1.2-jre")
-  implementation("com.fasterxml.jackson.core:jackson-databind:2.21.0")
+  implementation(libs.jibCore)
+  implementation(libs.guava)
+  implementation(libs.jacksonDatabind)
 }
 
 gradlePlugin {
