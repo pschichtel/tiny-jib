@@ -2,6 +2,7 @@ package tel.schich.tinyjib
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import tel.schich.tinyjib.service.ImageDownloadService
 import tel.schich.tinyjib.tasks.TinyJibDockerTask
 import tel.schich.tinyjib.tasks.TinyJibPublishTask
 import tel.schich.tinyjib.tasks.TinyJibTarTask
@@ -12,9 +13,14 @@ const val BUILD_PUBLISH_TASK_NAME: String = "tinyJibPublish"
 const val BUILD_TAR_TASK_NAME: String = "tinyJibTar"
 const val BUILD_DOCKER_TASK_NAME: String = "tinyJibDocker"
 
+const val DOWNLOAD_SERVICE_NAME = "tinyJibImageDownloader"
 
 class TinyJibPlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        project.gradle.sharedServices.registerIfAbsent(DOWNLOAD_SERVICE_NAME, ImageDownloadService::class.java) {
+            this.parameters.outputDir.set(project.rootProject.layout.buildDirectory.dir("tiny-jib"))
+        }
+
         val extension = project.extensions.create(
             EXTENSION_NAME,
             TinyJibExtension::class.java,

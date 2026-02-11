@@ -22,6 +22,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.services.ServiceReference
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -36,6 +37,7 @@ import tel.schich.tinyjib.jib.configureEntrypoint
 import tel.schich.tinyjib.jib.configureExtraDirectoryLayers
 import tel.schich.tinyjib.jib.getCredentials
 import tel.schich.tinyjib.params.ImageParams
+import tel.schich.tinyjib.service.ImageDownloadService
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.Instant
@@ -89,6 +91,14 @@ private data class ImageMetadataOutput(
 const val OUTPUT_DIRECTORY_NAME = "tiny-jib"
 const val CACHE_DIRECTORY_NAME = "$OUTPUT_DIRECTORY_NAME-cache"
 
+internal fun getPlatforms(extension: TinyJibExtension): Set<Platform> {
+    return extension.from.platforms.get().orEmpty().mapNotNull {
+        val architecture = it.architecture.orNull ?: return@mapNotNull null
+        val os = it.os.orNull ?: return@mapNotNull null
+        Platform(architecture, os)
+    }.toSet()
+}
+
 @CacheableTask
 abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTask() {
     private val logAdapter = Consumer<LogEvent> {
@@ -101,6 +111,9 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             LogEvent.Level.DEBUG -> logger.debug(it.message)
         }
     }
+
+    @get:ServiceReference(DOWNLOAD_SERVICE_NAME)
+    protected abstract val downloadService: Property<ImageDownloadService>
 
     @OutputDirectory
     val cacheDir: DirectoryProperty = project.objects.directoryProperty()
@@ -147,7 +160,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             return JavaContainerBuilder.from(imageName)
         }
 
-        val imageReference = ImageReference.parse(imageName.split("://", limit = 2).last());
+        val imageReference = ImageReference.parse(imageName.split("://", limit = 2).last())
         if (imageName.startsWith(Jib.DOCKER_DAEMON_IMAGE_PREFIX)) {
             val image = DockerDaemonImage.named(imageReference)
                 .setDockerEnvironment(extension.dockerClient.environment.orNull.orEmpty())
@@ -205,8 +218,6 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     }
 
     protected fun setupBuilder(): JibContainerBuilder {
-
-        val from = extension.from
         val container = extension.container
         val modificationTimeProvider =
             SimpleModificationTimeProvider(container.filesModificationTime.get())
@@ -217,11 +228,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             .setModificationTimeProvider(modificationTimeProvider)
             .configureDependencies()
 
-        val platforms = from.platforms.get().orEmpty().mapNotNull {
-            val architecture = it.architecture.orNull ?: return@mapNotNull null
-            val os = it.os.orNull ?: return@mapNotNull null
-            Platform(architecture, os)
-        }.toSet()
+        val platforms = getPlatforms(extension)
         val volumes = container.volumes.orNull.orEmpty().map {
             AbsoluteUnixPath.get(it)
         }.toSet()
@@ -268,13 +275,15 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     }
 
     protected fun buildImage(jibContainerBuilder: JibContainerBuilder, containerizer: Containerizer): JibContainer {
+        val baseImageCachePath = downloadService.get().download(temporaryDir, extension)
         val cachePath = cacheDir.asFile.get().toPath()
 
         val containerizer = containerizer.setOfflineMode(offlineMode.get())
             .setToolName("tiny-jib")
             .setToolVersion(TinyJibPlugin::class.java.`package`.implementationVersion)
             .setAllowInsecureRegistries(extension.allowInsecureRegistries.get())
-            .setBaseImageLayersCache(cachePath)
+            .setOfflineMode(true)
+            .setBaseImageLayersCache(baseImageCachePath)
             .setApplicationLayersCache(cachePath)
         val jibContainer = jibContainerBuilder.containerize(containerizer)
 
