@@ -10,9 +10,9 @@ import javax.inject.Inject
 abstract class TinyJibTarTask @Inject constructor(extension: TinyJibExtension) : TinyJibTask(extension) {
     @TaskAction
     fun performAction() {
+        val builder = setupBuilder()
         val targetImage = TarImage.at(extension.outputPaths.tar.get().toPath())
             .named(targetImageName())
-        val builder = setupBuilder()
         val containerizer = Containerizer.to(targetImage)
         buildImage(
             builder,

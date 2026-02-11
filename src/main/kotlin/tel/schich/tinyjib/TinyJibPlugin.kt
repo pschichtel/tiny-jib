@@ -2,6 +2,8 @@ package tel.schich.tinyjib
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.invoke
+import tel.schich.tinyjib.tasks.TinyJIbDownloadBaseImageTask
 import tel.schich.tinyjib.tasks.TinyJibDockerTask
 import tel.schich.tinyjib.tasks.TinyJibPublishTask
 import tel.schich.tinyjib.tasks.TinyJibTarTask
@@ -12,7 +14,6 @@ const val BUILD_PUBLISH_TASK_NAME: String = "tinyJibPublish"
 const val BUILD_TAR_TASK_NAME: String = "tinyJibTar"
 const val BUILD_DOCKER_TASK_NAME: String = "tinyJibDocker"
 
-
 class TinyJibPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create(
@@ -21,10 +22,18 @@ class TinyJibPlugin : Plugin<Project> {
             project
         )
 
+        val downloadBaseImageTask = project.tasks.register("tinyJibDownloadImage", TinyJIbDownloadBaseImageTask::class.java, extension)
+        downloadBaseImageTask {
+            imageName.set(extension.from.image)
+        }
+
         fun <T : TinyJibTask> register(name: String, kclass: KClass<T>) {
             project.tasks.register(name, kclass.java, extension)
                 .configure {
                     group = "container"
+                    downloadBaseImageTask {
+                        dependsOn(this.outputs.files)
+                    }
                 }
         }
 

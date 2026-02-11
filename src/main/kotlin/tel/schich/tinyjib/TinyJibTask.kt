@@ -89,6 +89,14 @@ private data class ImageMetadataOutput(
 const val OUTPUT_DIRECTORY_NAME = "tiny-jib"
 const val CACHE_DIRECTORY_NAME = "$OUTPUT_DIRECTORY_NAME-cache"
 
+internal fun getPlatforms(extension: TinyJibExtension): Set<Platform> {
+    return extension.from.platforms.get().orEmpty().mapNotNull {
+        val architecture = it.architecture.orNull ?: return@mapNotNull null
+        val os = it.os.orNull ?: return@mapNotNull null
+        Platform(architecture, os)
+    }.toSet()
+}
+
 @CacheableTask
 abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTask() {
     private val logAdapter = Consumer<LogEvent> {
@@ -147,7 +155,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             return JavaContainerBuilder.from(imageName)
         }
 
-        val imageReference = ImageReference.parse(imageName.split("://", limit = 2).last());
+        val imageReference = ImageReference.parse(imageName.split("://", limit = 2).last())
         if (imageName.startsWith(Jib.DOCKER_DAEMON_IMAGE_PREFIX)) {
             val image = DockerDaemonImage.named(imageReference)
                 .setDockerEnvironment(extension.dockerClient.environment.orNull.orEmpty())
@@ -217,11 +225,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             .setModificationTimeProvider(modificationTimeProvider)
             .configureDependencies()
 
-        val platforms = from.platforms.get().orEmpty().mapNotNull {
-            val architecture = it.architecture.orNull ?: return@mapNotNull null
-            val os = it.os.orNull ?: return@mapNotNull null
-            Platform(architecture, os)
-        }.toSet()
+        val platforms = getPlatforms(extension)
         val volumes = container.volumes.orNull.orEmpty().map {
             AbsoluteUnixPath.get(it)
         }.toSet()
