@@ -17,7 +17,8 @@ primarily due to the removal of many niche features and the switch to kotlin. Th
 
 ```kotlin
 plugins {
-  id("tel.schich.tinyjib") version "0.2.3"
+  // Checkout https://plugins.gradle.org/plugin/tel.schich.tinyjib for the latest version!
+  id("tel.schich.tinyjib") version "<use latest>"
 }
 ```
 
