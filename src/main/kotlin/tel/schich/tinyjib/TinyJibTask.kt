@@ -16,7 +16,6 @@ import com.google.cloud.tools.jib.api.buildplan.ImageFormat
 import com.google.cloud.tools.jib.api.buildplan.Platform
 import com.google.cloud.tools.jib.frontend.CredentialRetrieverFactory
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.ConfigurableFileCollection
@@ -28,7 +27,6 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.kotlin.dsl.property
 import tel.schich.tinyjib.jib.SimpleModificationTimeProvider
@@ -38,6 +36,7 @@ import tel.schich.tinyjib.jib.configureExtraDirectoryLayers
 import tel.schich.tinyjib.jib.getCredentials
 import tel.schich.tinyjib.params.ImageParams
 import tel.schich.tinyjib.service.ImageDownloadService
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.Instant
@@ -121,20 +120,25 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     @Input
     val offlineMode: Property<Boolean> = project.objects.property()
 
-    private val sourceSet: Property<SourceSet> = project.objects.property()
-    private val configuration: Property<Configuration> = project.objects.property()
+    private val sourceSetOutputClassesDir: ConfigurableFileCollection = project.objects.fileCollection()
+    private val sourceSetOutputResourcesDir: Property<File> = project.objects.property()
+    private val configuration: ConfigurableFileCollection = project.objects.fileCollection()
     private val projectDependencies: ConfigurableFileCollection = project.objects.fileCollection()
 
     init {
         cacheDir.convention(project.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME))
         offlineMode.convention(project.gradle.startParameter.isOffline)
 
-        sourceSet.value(extension.sourceSetName.map { project.extensions.getByType(SourceSetContainer::class.java).getByName(it) })
-        configuration.value(sourceSet.map { sourceSet ->
+        val sourceSet = extension.sourceSetName.map { project.extensions.getByType(SourceSetContainer::class.java).getByName(it) }
+        val configuration = sourceSet.map { sourceSet ->
             val configurationName = extension.configurationName
                 .getOrElse(sourceSet.runtimeClasspathConfigurationName)
             project.configurations.getByName(configurationName)
-        })
+        }
+
+        sourceSetOutputClassesDir.from(sourceSet.map { it.output.classesDirs })
+        sourceSetOutputResourcesDir.value(sourceSet.map { it.output.resourcesDir })
+        this.configuration.from(configuration)
 
         projectDependencies.from(configuration.map { configuration ->
             configuration
@@ -183,13 +187,11 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     }
 
     private fun JavaContainerBuilder.configureDependencies(): JavaContainerBuilder {
-        val configuration = configuration.get()
-        val sourceSet = sourceSet.get()
 
-        val classesOutputDirectories = sourceSet.output.classesDirs
+        val classesOutputDirectories = sourceSetOutputClassesDir
             .filter(Spec { obj -> obj.exists() })
 
-        val resourcesOutputDirectory = sourceSet.output.resourcesDir?.toPath()
+        val resourcesOutputDirectory = sourceSetOutputResourcesDir.orNull?.toPath()
         val allFiles = configuration
                 .filter(Spec { obj -> obj.exists() })
 
@@ -233,7 +235,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             AbsoluteUnixPath.get(it)
         }.toSet()
 
-        val dependencies = configuration.get()
+        val dependencies = configuration
             .asSequence()
             .filter { it.exists() && it.isFile() && it.getName().lowercase().endsWith(".jar") }
             .map { it.toPath() }
