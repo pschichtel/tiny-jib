@@ -284,7 +284,6 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             .setToolName("tiny-jib")
             .setToolVersion(TinyJibPlugin::class.java.`package`.implementationVersion)
             .setAllowInsecureRegistries(extension.allowInsecureRegistries.get())
-            .setOfflineMode(true)
             .setBaseImageLayersCache(baseImageCachePath)
             .setApplicationLayersCache(cachePath)
         val jibContainer = jibContainerBuilder.containerize(containerizer)
