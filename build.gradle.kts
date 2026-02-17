@@ -1,11 +1,25 @@
+import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
+
 plugins {
   `kotlin-dsl`
   `java-gradle-plugin`
   alias(libs.plugins.pluginPublish)
+  alias(libs.plugins.axionRelease)
+}
+
+scmVersion {
+  tag {
+    prefix = "v"
+  }
+  nextVersion {
+    suffix = "SNAPSHOT"
+    separator = "-"
+  }
+  versionCreator = PredefinedVersionCreator.SIMPLE.versionCreator
 }
 
 group = "tel.schich.tinyjib"
-version = "0.2.3"
+version = scmVersion.version
 
 java.toolchain {
   languageVersion = JavaLanguageVersion.of(8)
