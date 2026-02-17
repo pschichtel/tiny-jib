@@ -9,6 +9,10 @@ This project explicitly does _not_ try to reach feature parity with upstream.
 If you are lacking features from upstream, feel free to request them in the [issues](https://github.com/pschichtel/tiny-jib/issues),
 including a justification why you think it is reasonable to include that particular functionality.
 
+This plugin has roughly an order of magnitude less code than Jib's official Gradle plugin (~2200 vs ~30000 LoC),
+primarily due to the removal of many niche features and the switch to kotlin. That's why this plugin is called
+"tiny jib".
+
 ## Usage
 
 ```kotlin
