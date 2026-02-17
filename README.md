@@ -13,7 +13,7 @@ including a justification why you think it is reasonable to include that particu
 
 ```kotlin
 plugins {
-  id("tel.schich.tinyjib") version "0.2.0"
+  id("tel.schich.tinyjib") version "0.2.1"
 }
 ```
 
@@ -39,6 +39,7 @@ Then run `gradle tinyJibTar`.
 * Support for Gradle's Configuration Caching
 * Support for Gradle's Task Caching
 * Support for source sets other than `main` (e.g., for Kotlin Multiplatform projects)
+* Support for parallel builds of multi-module projects
 
 ## Documentation
 
