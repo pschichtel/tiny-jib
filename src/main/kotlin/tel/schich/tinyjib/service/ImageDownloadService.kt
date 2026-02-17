@@ -64,7 +64,7 @@ abstract class ImageDownloadService : BuildService<ImageDownloadParams> {
             val imagePath = tempPath.resolve("image.tar")
             val appLayersCachePath = tempPath.resolve("app-layers")
             val targetImage = TarImage.at(imagePath)
-                .named("$imageKey:latest")
+                .named("dummy:latest")
             val outputPath = parameters.outputDir.asFile.get().toPath().resolve(imageKey)
             logger.lifecycle("Downloading $imageName to $outputPath")
             val containerizer = Containerizer.to(targetImage)
