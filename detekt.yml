@@ -1,0 +1,11 @@
+style:
+  MaxLineLength:
+    maxLineLength: 200
+  ReturnCount:
+    active: false
+  UnusedImport:
+    active: true
+  UnnecessaryParentheses:
+    active: false
+  UnnecessaryLet:
+    active: false

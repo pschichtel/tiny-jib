@@ -5,6 +5,7 @@ plugins {
   `java-gradle-plugin`
   alias(libs.plugins.pluginPublish)
   alias(libs.plugins.axionRelease)
+  alias(libs.plugins.detekt)
 }
 
 scmVersion {
@@ -55,4 +56,10 @@ tasks.jar {
   manifest {
     attributes("Implementation-Version" to version.toString())
   }
+}
+
+detekt {
+  parallel = true
+  buildUponDefaultConfig = true
+  config.setFrom(files(project.rootDir.resolve("detekt.yml")))
 }
