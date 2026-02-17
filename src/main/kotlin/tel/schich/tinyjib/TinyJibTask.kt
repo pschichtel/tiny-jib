@@ -70,7 +70,7 @@ private val creationTimeFormatter = DateTimeFormatterBuilder()
     .optionalEnd()
     .toFormatter()
 
-fun parseCreationTime(time: String?): Instant = when (time) {
+private fun parseCreationTime(time: String?): Instant = when (time) {
     null, "EPOCH" -> Instant.EPOCH
     "USE_CURRENT_TIMESTAMP" -> Instant.now()
     else -> creationTimeFormatter.parse(time, Instant::from)
