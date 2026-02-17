@@ -6,7 +6,6 @@ import com.google.cloud.tools.jib.api.Jib
 import com.google.cloud.tools.jib.api.RegistryImage
 import com.google.cloud.tools.jib.api.TarImage
 import com.google.cloud.tools.jib.api.buildplan.ImageFormat
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.services.BuildService
@@ -21,15 +20,16 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-interface ImageDownloadParams : BuildServiceParameters {
-    val outputDir: DirectoryProperty
-}
+private data class ImageKey(val name: String, val baseImageCache: Path)
 
 private class ImageDownloadResult(private val imageName: String, private val logger: Logger) {
     private val lock = ReentrantLock()
     private var outputPath: Path? = null
 
     fun fetch(block: () -> Path): Path {
+        outputPath?.let {
+            return it
+        }
         lock.withLock {
             val outputPath = this.outputPath
             if (outputPath == null) {
@@ -43,21 +43,23 @@ private class ImageDownloadResult(private val imageName: String, private val log
     }
 }
 
-abstract class ImageDownloadService : BuildService<ImageDownloadParams> {
+abstract class ImageDownloadService : BuildService<BuildServiceParameters.None> {
 
-    private val downloads = ConcurrentHashMap<String, ImageDownloadResult>()
+    private val downloads = ConcurrentHashMap<ImageKey, ImageDownloadResult>()
     private val logger: Logger = Logging.getLogger(javaClass)
 
-    private fun deriveKey(imageName: String) = imageName
+    private fun deriveFolderName(imageName: String) = imageName
         .replace("_", "__")
         .replace(":", "_")
         .replace("-", "--")
         .replace("/", "-")
 
-    fun download(temporaryDir: File, extension: TinyJibExtension): Path {
+    fun download(targetDir: Path, temporaryDir: File, extension: TinyJibExtension): Path {
         val imageName = extension.from.image.get()
-        val imageKey = deriveKey(imageName)
-        val result = downloads.computeIfAbsent(imageName) { _ -> ImageDownloadResult(imageName, logger) }
+        val folderName = deriveFolderName(imageName)
+        val result = downloads.computeIfAbsent(ImageKey(imageName, targetDir)) {
+            ImageDownloadResult(imageName, logger)
+        }
 
         return result.fetch {
             val tempPath = temporaryDir.toPath().resolve("tiny-jib-tmp")
@@ -65,7 +67,7 @@ abstract class ImageDownloadService : BuildService<ImageDownloadParams> {
             val appLayersCachePath = tempPath.resolve("app-layers")
             val targetImage = TarImage.at(imagePath)
                 .named("dummy:latest")
-            val outputPath = parameters.outputDir.asFile.get().toPath().resolve(imageKey)
+            val outputPath = targetDir.resolve(folderName)
             logger.lifecycle("Downloading $imageName to $outputPath")
             val containerizer = Containerizer.to(targetImage)
                 .setOfflineMode(false)

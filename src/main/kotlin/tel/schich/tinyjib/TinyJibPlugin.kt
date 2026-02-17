@@ -17,9 +17,7 @@ const val DOWNLOAD_SERVICE_NAME = "tinyJibImageDownloader"
 
 class TinyJibPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.gradle.sharedServices.registerIfAbsent(DOWNLOAD_SERVICE_NAME, ImageDownloadService::class.java) {
-            this.parameters.outputDir.set(project.rootProject.layout.buildDirectory.dir("tiny-jib"))
-        }
+        project.gradle.sharedServices.registerIfAbsent(DOWNLOAD_SERVICE_NAME, ImageDownloadService::class.java)
 
         val extension = project.extensions.create(
             EXTENSION_NAME,

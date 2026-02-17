@@ -7,8 +7,10 @@ import tel.schich.tinyjib.params.ExtraDirectoriesParameters
 import tel.schich.tinyjib.params.OutputPathsParameters
 import tel.schich.tinyjib.params.TargetImageParameters
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.newInstance
@@ -39,6 +41,12 @@ abstract class TinyJibExtension(project: Project) {
 
     @Input
     val sourceSetName: Property<String> = project.objects.property()
+
+    @get:LocalState
+    internal val applicationCache: DirectoryProperty = project.objects.directoryProperty()
+
+    @get:LocalState
+    internal val baseImageCache: DirectoryProperty = project.objects.directoryProperty()
 
     init {
         allowInsecureRegistries.convention(DEFAULT_ALLOW_INSECURE_REGISTRIES)

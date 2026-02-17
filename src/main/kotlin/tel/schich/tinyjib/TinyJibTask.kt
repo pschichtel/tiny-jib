@@ -26,7 +26,6 @@ import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.kotlin.dsl.property
 import tel.schich.tinyjib.jib.SimpleModificationTimeProvider
@@ -114,19 +113,19 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     @get:ServiceReference(DOWNLOAD_SERVICE_NAME)
     protected abstract val downloadService: Property<ImageDownloadService>
 
-    @OutputDirectory
-    val cacheDir: DirectoryProperty = project.objects.directoryProperty()
-
     @Input
     val offlineMode: Property<Boolean> = project.objects.property()
 
+    private val applicationCache: DirectoryProperty = project.objects.directoryProperty()
+    private val baseImageCache: DirectoryProperty = project.objects.directoryProperty()
     private val sourceSetOutputClassesDir: ConfigurableFileCollection = project.objects.fileCollection()
     private val sourceSetOutputResourcesDir: Property<File> = project.objects.property()
     private val configuration: ConfigurableFileCollection = project.objects.fileCollection()
     private val projectDependencies: ConfigurableFileCollection = project.objects.fileCollection()
 
     init {
-        cacheDir.convention(project.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME))
+        applicationCache.convention(extension.applicationCache.orElse(project.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME)))
+        baseImageCache.value(extension.baseImageCache.orElse(project.rootProject.layout.buildDirectory.dir(CACHE_DIRECTORY_NAME)))
         offlineMode.convention(project.gradle.startParameter.isOffline)
 
         val sourceSet = extension.sourceSetName.map { project.extensions.getByType(SourceSetContainer::class.java).getByName(it) }
@@ -210,7 +209,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
         addProjectDependencies(projectDependencies.asSequence().map { it.toPath() }.toList())
 
         if (resourcesOutputDirectory != null && Files.exists(resourcesOutputDirectory)) {
-            addResources(resourcesOutputDirectory);
+            addResources(resourcesOutputDirectory)
         }
         for (classesOutputDirectory in classesOutputDirectories) {
             addClasses(classesOutputDirectory.toPath())
@@ -247,7 +246,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
                 setPlatforms(platforms)
             }
             configureEntrypoint(
-                cacheDir.asFile.get().toPath(),
+                applicationCache.asFile.get().toPath(),
                 appRoot,
                 container.entrypoint.orNull?.ifEmpty { null },
                 container.mainClass.get(),
@@ -277,8 +276,12 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     }
 
     protected fun buildImage(jibContainerBuilder: JibContainerBuilder, containerizer: Containerizer): JibContainer {
-        val baseImageCachePath = downloadService.get().download(temporaryDir, extension)
-        val cachePath = cacheDir.asFile.get().toPath()
+        val baseImageCachePath = downloadService.get().download(
+            baseImageCache.asFile.get().toPath(),
+            temporaryDir,
+            extension
+        )
+        val cachePath = applicationCache.asFile.get().toPath()
 
         val containerizer = containerizer.setOfflineMode(offlineMode.get())
             .setToolName("tiny-jib")
