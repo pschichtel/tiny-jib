@@ -13,7 +13,7 @@ including a justification why you think it is reasonable to include that particu
 
 ```kotlin
 plugins {
-  id("tel.schich.tinyjib") version "0.1.0"
+  id("tel.schich.tinyjib") version "0.2.0"
 }
 ```
 
