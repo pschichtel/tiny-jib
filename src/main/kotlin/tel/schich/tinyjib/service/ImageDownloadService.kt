@@ -2,7 +2,7 @@ package tel.schich.tinyjib.service
 
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.ImageReference
-import com.google.cloud.tools.jib.api.JavaContainerBuilder
+import com.google.cloud.tools.jib.api.Jib
 import com.google.cloud.tools.jib.api.RegistryImage
 import com.google.cloud.tools.jib.api.TarImage
 import com.google.cloud.tools.jib.api.buildplan.ImageFormat
@@ -17,7 +17,6 @@ import tel.schich.tinyjib.getPlatforms
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardOpenOption
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -64,9 +63,6 @@ abstract class ImageDownloadService : BuildService<ImageDownloadParams> {
             val tempPath = temporaryDir.toPath().resolve("tiny-jib-tmp")
             val imagePath = tempPath.resolve("image.tar")
             val appLayersCachePath = tempPath.resolve("app-layers")
-            val resourcePath = tempPath.resolve("resources")
-            Files.createDirectories(resourcePath)
-            Files.write(resourcePath.resolve("dummy"), "dummy".toByteArray(), StandardOpenOption.CREATE)
             val targetImage = TarImage.at(imagePath)
                 .named("$imageKey:latest")
             val outputPath = parameters.outputDir.asFile.get().toPath().resolve(imageKey)
@@ -82,9 +78,7 @@ abstract class ImageDownloadService : BuildService<ImageDownloadParams> {
 
             val imageReference = ImageReference.parse(imageName)
             val baseImage = RegistryImage.named(imageReference)
-            JavaContainerBuilder.from(baseImage)
-                .addResources(resourcePath)
-                .toContainerBuilder()
+            Jib.from(baseImage)
                 .setFormat(ImageFormat.OCI)
                 .apply {
                     if (platforms.isNotEmpty()) {
@@ -92,6 +86,11 @@ abstract class ImageDownloadService : BuildService<ImageDownloadParams> {
                     }
                 }
                 .containerize(containerizer)
+
+            Files.walk(tempPath).use { walk ->
+                walk.sorted(Comparator.reverseOrder())
+                    .forEach(Files::delete)
+            }
 
             outputPath
         }
