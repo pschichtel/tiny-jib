@@ -1,6 +1,6 @@
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.3.10"
-    id("tel.schich.tinyjib") version "0.2.2"
+    id("tel.schich.tinyjib") version "0.2.3"
 }
 
 repositories {
