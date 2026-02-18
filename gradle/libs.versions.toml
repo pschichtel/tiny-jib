@@ -5,8 +5,11 @@ guava = "32.1.2-jre"
 jackson = "2.21.0"
 axionRelease = "1.21.1"
 detekt = "2.0.0-alpha.2"
-kgp = "2.3.10"
+kotlin-gradle-plugin = "2.3.10"
+# 2.2 to support languageVersion 1.8 to support Gradle 8
+kotlin-compiler = "2.2.21"
 tapmoc = "0.4.0"
+serialization-json = "1.10.0"
 gradle-api = "8.0"
 
 [libraries]
@@ -14,10 +17,14 @@ jibCore = { module = "com.google.cloud.tools:jib-core", version.ref = "jib" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 gradle-api = { module = "dev.gradleplugins:gradle-api", version.ref = "gradle-api" }
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization-json" }
 
 [plugins]
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
 axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kgp" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-gradle-plugin" }
+# Note how we're using the compiler version here and not the gradle plugin version
+# See https://youtrack.jetbrains.com/issue/KT-81629
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-compiler" }
 tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }
