@@ -41,10 +41,10 @@ abstract class TinyJibExtension(project: Project) {
     abstract val sourceSetName: Property<String>
 
     @get:LocalState
-    internal abstract val applicationCache: DirectoryProperty
+    abstract val applicationCache: DirectoryProperty
 
     @get:LocalState
-    internal abstract val baseImageCache: DirectoryProperty
+    abstract val baseImageCache: DirectoryProperty
 
     init {
         allowInsecureRegistries.convention(DEFAULT_ALLOW_INSECURE_REGISTRIES)
