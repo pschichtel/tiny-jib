@@ -7,6 +7,7 @@ plugins {
   `java-gradle-plugin`
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.tapmoc)
+  alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.pluginPublish)
   alias(libs.plugins.axionRelease)
   alias(libs.plugins.detekt)
@@ -18,7 +19,7 @@ tapmoc {
 
 kotlin {
   @OptIn(ExperimentalBuildToolsApi::class, ExperimentalKotlinGradlePluginApi::class)
-  compilerVersion.set("2.2.21") // needed to target languageVersion 1.8
+  compilerVersion.set(libs.versions.kotlin.compiler.get())
 }
 
 scmVersion {
@@ -41,6 +42,7 @@ repositories {
 }
 
 dependencies {
+  implementation(libs.serialization.json)
   implementation(libs.jibCore)
   implementation(libs.guava)
   implementation(libs.jacksonDatabind)
