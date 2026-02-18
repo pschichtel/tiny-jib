@@ -36,6 +36,7 @@ Then run `gradle tinyJibTar`.
 * No support for property-based configuration
 * No support for Docker image format
 * No support for Main class detection
+* No support for Gradle versions older than 8
 * Limited support for Java versions older than 9
 * ...
 
