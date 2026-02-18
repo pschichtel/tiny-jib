@@ -57,7 +57,7 @@ abstract class ImageDownloadService : BuildService<BuildServiceParameters.None> 
     fun download(targetDir: Path, temporaryDir: File, extension: TinyJibExtension): Path {
         val imageName = extension.from.image.get()
         val folderName = deriveFolderName(imageName)
-        val result = downloads.computeIfAbsent(ImageKey(imageName, targetDir)) {
+        val result = downloads.computeIfAbsent(ImageKey(imageName, targetDir.toRealPath())) {
             ImageDownloadResult(imageName, logger)
         }
 
