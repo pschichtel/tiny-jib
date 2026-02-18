@@ -4,9 +4,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
-import org.gradle.kotlin.dsl.listProperty
-import org.gradle.kotlin.dsl.mapProperty
-import org.gradle.kotlin.dsl.newInstance
 import javax.inject.Inject
 
 interface PathsBuilder {
@@ -18,7 +15,7 @@ private class SimplePathsBuilder(
     private val objectFactory: ObjectFactory,
 ) : PathsBuilder {
     override fun path(block: ExtraDirectoryParameters.() -> Unit) {
-        val instance = objectFactory.newInstance<ExtraDirectoryParameters>()
+        val instance = objectFactory.newInstance(ExtraDirectoryParameters::class.java)
         instance.block()
         paths.add(instance)
     }
@@ -26,10 +23,10 @@ private class SimplePathsBuilder(
 
 abstract class ExtraDirectoriesParameters @Inject constructor(private val objectFactory: ObjectFactory) {
     @get:Input
-    val paths: ListProperty<ExtraDirectoryParameters> = objectFactory.listProperty()
+    abstract val paths: ListProperty<ExtraDirectoryParameters>
 
     @get:Input
-    val permissions: MapProperty<String, String> = objectFactory.mapProperty()
+    abstract val permissions: MapProperty<String, String>
 
     fun paths(block: PathsBuilder.() -> Unit) {
         SimplePathsBuilder(paths, objectFactory).block()

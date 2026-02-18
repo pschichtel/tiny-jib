@@ -1,20 +1,16 @@
 package tel.schich.tinyjib.params
 
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
-import org.gradle.kotlin.dsl.mapProperty
-import org.gradle.kotlin.dsl.property
-import javax.inject.Inject
 
-abstract class DockerClientParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class DockerClientParameters {
     @get:Optional
     @get:Input
-    val executable: Property<String> = objectFactory.property()
+    abstract val executable: Property<String>
 
     @get:Optional
     @get:Input
-    val environment: MapProperty<String, String> = objectFactory.mapProperty()
+    abstract val environment: MapProperty<String, String>
 }

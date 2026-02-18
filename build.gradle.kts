@@ -1,11 +1,24 @@
+import org.jetbrains.kotlin.buildtools.api.ExperimentalBuildToolsApi
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
 plugins {
-  `kotlin-dsl`
+
   `java-gradle-plugin`
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.tapmoc)
   alias(libs.plugins.pluginPublish)
   alias(libs.plugins.axionRelease)
   alias(libs.plugins.detekt)
+}
+
+tapmoc {
+  gradle("8.0.0")
+}
+
+kotlin {
+  @OptIn(ExperimentalBuildToolsApi::class, ExperimentalKotlinGradlePluginApi::class)
+  compilerVersion.set("2.2.21") // needed to target languageVersion 1.8
 }
 
 scmVersion {
@@ -22,10 +35,6 @@ scmVersion {
 group = "tel.schich.tinyjib"
 version = scmVersion.version
 
-java.toolchain {
-  languageVersion = JavaLanguageVersion.of(8)
-}
-
 repositories {
   mavenCentral()
   gradlePluginPortal()
@@ -35,6 +44,21 @@ dependencies {
   implementation(libs.jibCore)
   implementation(libs.guava)
   implementation(libs.jacksonDatabind)
+  compileOnly(libs.gradle.api)
+}
+
+/**
+ * java-gradle-plugin adds `gradleApi()` to the `api` dependencies, which isn't ideal because:
+ * - the user distribution provides the Gradle version.
+ * - compiling against an older version of the Gradle API can help us detect invalid API usages.
+ *
+ * So we remove `gradleApi()` here and instead pull the Nokee redistributed artifact as a compileOnly
+ * dependency
+ */
+configurations.named("api").configure {
+  dependencies.removeIf {
+    it is FileCollectionDependency
+  }
 }
 
 gradlePlugin {

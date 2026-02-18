@@ -20,6 +20,7 @@ import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.services.ServiceReference
 import org.gradle.api.specs.Spec
@@ -27,7 +28,6 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.kotlin.dsl.property
 import tel.schich.tinyjib.jib.SimpleModificationTimeProvider
 import tel.schich.tinyjib.jib.addConfigBasedRetrievers
 import tel.schich.tinyjib.jib.configureEntrypoint
@@ -114,12 +114,12 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
     protected abstract val downloadService: Property<ImageDownloadService>
 
     @Input
-    val offlineMode: Property<Boolean> = project.objects.property()
+    val offlineMode: Property<Boolean> = project.objects.property(Boolean::class.java)
 
     private val applicationCache: DirectoryProperty = project.objects.directoryProperty()
     private val baseImageCache: DirectoryProperty = project.objects.directoryProperty()
     private val sourceSetOutputClassesDir: ConfigurableFileCollection = project.objects.fileCollection()
-    private val sourceSetOutputResourcesDir: Property<File> = project.objects.property()
+    private val sourceSetOutputResourcesDir: RegularFileProperty = project.objects.fileProperty()
     private val configuration: ConfigurableFileCollection = project.objects.fileCollection()
     private val projectDependencies: ConfigurableFileCollection = project.objects.fileCollection()
 
@@ -136,7 +136,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
         }
 
         sourceSetOutputClassesDir.from(sourceSet.map { it.output.classesDirs })
-        sourceSetOutputResourcesDir.value(sourceSet.map { it.output.resourcesDir })
+        sourceSetOutputResourcesDir.fileProvider(sourceSet.map { it.output.resourcesDir!! })
         this.configuration.from(configuration)
 
         projectDependencies.from(configuration.map { configuration ->
@@ -190,7 +190,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
         val classesOutputDirectories = sourceSetOutputClassesDir
             .filter(Spec { obj -> obj.exists() })
 
-        val resourcesOutputDirectory = sourceSetOutputResourcesDir.orNull?.toPath()
+        val resourcesOutputDirectory = sourceSetOutputResourcesDir.orNull?.asFile?.toPath()
         val allFiles = configuration
                 .filter(Spec { obj -> obj.exists() })
 

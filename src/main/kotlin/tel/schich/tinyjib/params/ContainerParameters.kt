@@ -7,63 +7,60 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
-import org.gradle.kotlin.dsl.listProperty
-import org.gradle.kotlin.dsl.mapProperty
-import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
-abstract class ContainerParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class ContainerParameters {
     @get:Optional
     @get:Input
-    val jvmFlags: ListProperty<String> = objectFactory.listProperty()
-
-    @get:Optional
-    @get:Input
-    val environment: MapProperty<String, String> = objectFactory.mapProperty()
+    abstract val jvmFlags: ListProperty<String>
 
     @get:Optional
     @get:Input
-    val entrypoint: ListProperty<String> = objectFactory.listProperty()
+    abstract val environment: MapProperty<String, String>
 
     @get:Optional
     @get:Input
-    val extraClasspath: ListProperty<String> = objectFactory.listProperty()
-
-    @get:Input
-    val mainClass: Property<String> = objectFactory.property()
+    abstract val entrypoint: ListProperty<String>
 
     @get:Optional
     @get:Input
-    val args: ListProperty<String> = objectFactory.listProperty()
+    abstract val extraClasspath: ListProperty<String>
+
+    @get:Input
+    abstract val mainClass: Property<String>
 
     @get:Optional
     @get:Input
-    val ports: ListProperty<String> = objectFactory.listProperty()
+    abstract val args: ListProperty<String>
 
     @get:Optional
     @get:Input
-    val volumes: ListProperty<String> = objectFactory.listProperty()
+    abstract val ports: ListProperty<String>
 
     @get:Optional
     @get:Input
-    val labels: MapProperty<String, String> = objectFactory.mapProperty()
-
-    @get:Input
-    val appRoot: Property<String> = objectFactory.property()
+    abstract val volumes: ListProperty<String>
 
     @get:Optional
     @get:Input
-    val user: Property<String> = objectFactory.property()
+    abstract val labels: MapProperty<String, String>
+
+    @get:Input
+    abstract val appRoot: Property<String>
 
     @get:Optional
     @get:Input
-    val workingDirectory: Property<String> = objectFactory.property()
+    abstract val user: Property<String>
+
+    @get:Optional
+    @get:Input
+    abstract val workingDirectory: Property<String>
 
     @get:Input
-    val filesModificationTime: Property<String> = objectFactory.property()
+    abstract val filesModificationTime: Property<String>
 
     @get:Input
-    val creationTime: Property<String> = objectFactory.property<String>()
+    abstract val creationTime: Property<String>
 
     init {
         appRoot.convention(JavaContainerBuilder.DEFAULT_APP_ROOT)
