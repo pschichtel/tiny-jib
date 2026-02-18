@@ -94,7 +94,7 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
         when (it.level) {
             LogEvent.Level.ERROR -> logger.error(it.message)
             LogEvent.Level.WARN -> logger.warn(it.message)
-            LogEvent.Level.LIFECYCLE -> logger.lifecycle(it.message)
+            null, LogEvent.Level.LIFECYCLE -> logger.lifecycle(it.message)
             LogEvent.Level.PROGRESS -> logger.lifecycle(it.message)
             LogEvent.Level.INFO -> logger.info(it.message)
             LogEvent.Level.DEBUG -> logger.debug(it.message)
@@ -120,9 +120,9 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
         offlineMode.convention(project.gradle.startParameter.isOffline)
 
         val sourceSet = extension.sourceSetName.map { project.extensions.getByType(SourceSetContainer::class.java).getByName(it) }
-        val configuration = sourceSet.map { sourceSet ->
+        val configuration = sourceSet.map {
             val configurationName = extension.configurationName
-                .getOrElse(sourceSet.runtimeClasspathConfigurationName)
+                .getOrElse(it.runtimeClasspathConfigurationName)
             project.configurations.getByName(configurationName)
         }
 
@@ -130,9 +130,8 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
         sourceSetOutputResourcesDir.fileProvider(sourceSet.map { it.output.resourcesDir!! })
         this.configuration.from(configuration)
 
-        projectDependencies.from(configuration.map { configuration ->
-            configuration
-                .resolvedConfiguration
+        projectDependencies.from(configuration.map {
+            it.resolvedConfiguration
                 .resolvedArtifacts
                 .filterIsInstance<ResolvedArtifact>()
                 .asSequence()
@@ -274,13 +273,13 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
         )
         val cachePath = applicationCache.asFile.get().toPath()
 
-        val containerizer = containerizer.setOfflineMode(offlineMode.get())
+        val jibContainer = containerizer.setOfflineMode(offlineMode.get())
             .setToolName("tiny-jib")
             .setToolVersion(TinyJibPlugin::class.java.`package`.implementationVersion)
             .setAllowInsecureRegistries(extension.allowInsecureRegistries.get())
             .setBaseImageLayersCache(baseImageCachePath)
             .setApplicationLayersCache(cachePath)
-        val jibContainer = jibContainerBuilder.containerize(containerizer)
+            .let(jibContainerBuilder::containerize)
 
         val imageDigest = jibContainer.digest.toString()
         Files.write(extension.outputPaths.digest.get().toPath(), imageDigest.encodeToByteArray())
