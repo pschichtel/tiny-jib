@@ -5,7 +5,7 @@ guava = "32.1.2-jre"
 jackson = "2.21.0"
 axionRelease = "1.21.1"
 detekt = "2.0.0-alpha.2"
-kgp = "2.3.0"
+kgp = "2.3.10"
 tapmoc = "0.4.0"
 gradle-api = "8.0"
 
