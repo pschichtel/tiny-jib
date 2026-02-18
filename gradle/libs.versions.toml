@@ -13,7 +13,7 @@ gradle-api = "8.0"
 jibCore = { module = "com.google.cloud.tools:jib-core", version.ref = "jib" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
-gradle-api = { module = "dev.gradleplugins:gradle-api", version = "gradle-api" }
+gradle-api = { module = "dev.gradleplugins:gradle-api", version.ref = "gradle-api" }
 
 [plugins]
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
