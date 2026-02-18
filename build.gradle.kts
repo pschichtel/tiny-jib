@@ -45,7 +45,6 @@ dependencies {
   implementation(libs.serialization.json)
   implementation(libs.jibCore)
   implementation(libs.guava)
-  implementation(libs.jacksonDatabind)
   compileOnly(libs.gradle.api)
 }
 

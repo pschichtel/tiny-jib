@@ -1,6 +1,5 @@
 package tel.schich.tinyjib
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.ImageReference
@@ -15,6 +14,9 @@ import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath
 import com.google.cloud.tools.jib.api.buildplan.ImageFormat
 import com.google.cloud.tools.jib.api.buildplan.Platform
 import com.google.cloud.tools.jib.frontend.CredentialRetrieverFactory
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToStream
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -28,6 +30,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.SourceSetContainer
+import tel.schich.tinyjib.jib.ImageMetadataOutput
 import tel.schich.tinyjib.jib.SimpleModificationTimeProvider
 import tel.schich.tinyjib.jib.addConfigBasedRetrievers
 import tel.schich.tinyjib.jib.configureEntrypoint
@@ -35,7 +38,6 @@ import tel.schich.tinyjib.jib.configureExtraDirectoryLayers
 import tel.schich.tinyjib.jib.getCredentials
 import tel.schich.tinyjib.params.ImageParams
 import tel.schich.tinyjib.service.ImageDownloadService
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.Instant
@@ -45,7 +47,6 @@ import java.util.function.Consumer
 import kotlin.Boolean
 import kotlin.String
 import kotlin.apply
-import kotlin.collections.List
 import kotlin.collections.asSequence
 import kotlin.collections.filterIsInstance
 import kotlin.collections.last
@@ -75,16 +76,6 @@ private fun parseCreationTime(time: String?): Instant = when (time) {
     "USE_CURRENT_TIMESTAMP" -> Instant.now()
     else -> creationTimeFormatter.parse(time, Instant::from)
 }
-
-private val objectMapper = JsonMapper()
-
-private data class ImageMetadataOutput(
-    val image: String,
-    val imageId: String,
-    val imageDigest: String,
-    val tags: List<String>,
-    val imagePushed: Boolean,
-)
 
 const val OUTPUT_DIRECTORY_NAME = "tiny-jib"
 const val CACHE_DIRECTORY_NAME = "$OUTPUT_DIRECTORY_NAME-cache"
@@ -304,7 +295,10 @@ abstract class TinyJibTask(@Nested val extension: TinyJibExtension) : DefaultTas
             tags = jibContainer.tags.map { it.toString() },
             imagePushed = jibContainer.isImagePushed,
         )
-        objectMapper.writeValue(extension.outputPaths.imageJson.get(), metadataOutput)
+        Files.newOutputStream(extension.outputPaths.imageJson.get().toPath()).use { file ->
+            @OptIn(ExperimentalSerializationApi::class)
+            Json.encodeToStream(metadataOutput, file)
+        }
 
         return jibContainer
     }
