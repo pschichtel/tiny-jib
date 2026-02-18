@@ -17,6 +17,10 @@ const val DOWNLOAD_SERVICE_NAME = "tinyJibImageDownloader"
 
 class TinyJibPlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        /**
+         * The API without the configure lambda is only available in Gradle 8.7
+         * See https://docs.gradle.org/current/kotlin-dsl/gradle/org.gradle.api.services/-build-service-registry/register-if-absent.html
+         */
         project.gradle.sharedServices.registerIfAbsent(DOWNLOAD_SERVICE_NAME, ImageDownloadService::class.java) {}
 
         val extension = project.extensions.create(
@@ -38,6 +42,5 @@ class TinyJibPlugin : Plugin<Project> {
         register(BUILD_DOCKER_TASK_NAME, TinyJibDockerTask::class)
 
         register(BUILD_TAR_TASK_NAME, TinyJibTarTask::class)
-
     }
 }

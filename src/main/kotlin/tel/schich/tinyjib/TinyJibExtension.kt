@@ -13,38 +13,40 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
+import org.gradle.kotlin.dsl.newInstance
+import org.gradle.kotlin.dsl.property
 
 const val DEFAULT_ALLOW_INSECURE_REGISTRIES: Boolean = false
 
 abstract class TinyJibExtension(project: Project) {
     @Nested
-    val from: BaseImageParameters = project.objects.newInstance(BaseImageParameters::class.java)
+    val from: BaseImageParameters = project.objects.newInstance()
     @Nested
-    val to: TargetImageParameters = project.objects.newInstance(TargetImageParameters::class.java)
+    val to: TargetImageParameters = project.objects.newInstance()
     @Nested
-    val container: ContainerParameters = project.objects.newInstance(ContainerParameters::class.java)
+    val container: ContainerParameters = project.objects.newInstance()
     @Nested
-    val extraDirectories: ExtraDirectoriesParameters = project.objects.newInstance(ExtraDirectoriesParameters::class.java)
+    val extraDirectories: ExtraDirectoriesParameters = project.objects.newInstance()
     @Nested
-    val dockerClient: DockerClientParameters = project.objects.newInstance(DockerClientParameters::class.java)
+    val dockerClient: DockerClientParameters = project.objects.newInstance()
     @Nested
-    val outputPaths: OutputPathsParameters = project.objects.newInstance(OutputPathsParameters::class.java, project)
+    val outputPaths: OutputPathsParameters = project.objects.newInstance(project)
 
-    @get:Input
-    abstract val allowInsecureRegistries: Property<Boolean>
+    @Input
+    val allowInsecureRegistries: Property<Boolean> = project.objects.property()
 
-    @get:Input
-    @get:Optional
-    abstract val configurationName: Property<String>
+    @Input
+    @Optional
+    val configurationName: Property<String> = project.objects.property()
 
-    @get:Input
-    abstract val sourceSetName: Property<String>
-
-    @get:LocalState
-    internal abstract val applicationCache: DirectoryProperty
+    @Input
+    val sourceSetName: Property<String> = project.objects.property()
 
     @get:LocalState
-    internal abstract val baseImageCache: DirectoryProperty
+    internal val applicationCache: DirectoryProperty = project.objects.directoryProperty()
+
+    @get:LocalState
+    internal val baseImageCache: DirectoryProperty = project.objects.directoryProperty()
 
     init {
         allowInsecureRegistries.convention(DEFAULT_ALLOW_INSECURE_REGISTRIES)
