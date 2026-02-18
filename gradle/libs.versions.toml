@@ -6,7 +6,7 @@ jackson = "2.21.0"
 axionRelease = "1.21.1"
 detekt = "2.0.0-alpha.2"
 kotlin-gradle-plugin = "2.3.10"
-# 2.2 to support languageVersion 1.8 to support Gragle 8
+# 2.2 to support languageVersion 1.8 to support Gradle 8
 kotlin-compiler = "2.2.21"
 tapmoc = "0.4.0"
 serialization-json = "1.10.0"
