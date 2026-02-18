@@ -40,6 +40,14 @@ dependencies {
   compileOnly(libs.gradle.api)
 }
 
+/**
+ * java-gradle-plugin adds `gradleApi()` to the `api` dependencies, which isn't ideal because:
+ * - the user distribution provides the Gradle version.
+ * - compiling against an older version of the Gradle API can help us detect invalid API usages.
+ *
+ * So we remove `gradleApi()` here and instead pull the Nokee redistributed artifact as a compileOnly
+ * dependency
+ */
 configurations.named("api").configure {
   dependencies.removeIf {
     it is FileCollectionDependency
