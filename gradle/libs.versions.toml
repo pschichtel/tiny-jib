@@ -24,5 +24,7 @@ pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish
 axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-gradle-plugin" }
+# Note how we're using the compiler version here and not the gradle plugin version
+# See https://youtrack.jetbrains.com/issue/KT-81629
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-compiler" }
 tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }
