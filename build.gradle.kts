@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.buildtools.api.ExperimentalBuildToolsApi
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
 plugins {
@@ -12,6 +14,11 @@ plugins {
 
 tapmoc {
   gradle("8.0.0")
+}
+
+kotlin {
+  @OptIn(ExperimentalBuildToolsApi::class, ExperimentalKotlinGradlePluginApi::class)
+  compilerVersion.set("2.2.21") // needed to target languageVersion 1.8
 }
 
 scmVersion {

@@ -6,7 +6,7 @@ jackson = "2.21.0"
 axionRelease = "1.21.1"
 detekt = "2.0.0-alpha.2"
 # We sadly can't use 2.3 because 2.3 drops support for languageVersion 1.8
-kgp = "2.2.0"
+kgp = "2.3.0"
 tapmoc = "0.4.0"
 gradle-api = "8.0"
 
