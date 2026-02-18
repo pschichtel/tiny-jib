@@ -1,27 +1,23 @@
 package tel.schich.tinyjib.params
 
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
-import org.gradle.kotlin.dsl.listProperty
-import org.gradle.kotlin.dsl.property
 import java.io.File
-import javax.inject.Inject
 
-abstract class ExtraDirectoryParameters @Inject constructor(objectFactory: ObjectFactory) {
+abstract class ExtraDirectoryParameters  {
     @get:Input
-    val from: Property<File> = objectFactory.property()
-
-    @get:Input
-    val into: Property<String> = objectFactory.property()
+    abstract val from: Property<File>
 
     @get:Input
-    @get:Optional
-    val includes: ListProperty<String> = objectFactory.listProperty()
+    abstract val into: Property<String>
 
     @get:Input
     @get:Optional
-    val excludes: ListProperty<String> = objectFactory.listProperty()
+    abstract val includes: ListProperty<String>
+
+    @get:Input
+    @get:Optional
+    abstract val excludes: ListProperty<String>
 }

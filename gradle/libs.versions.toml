@@ -5,13 +5,20 @@ guava = "32.1.2-jre"
 jackson = "2.21.0"
 axionRelease = "1.21.1"
 detekt = "2.0.0-alpha.2"
+# We sadly can't use 2.3 because 2.3 drops support for languageVersion 1.8
+kgp = "2.2.0"
+tapmoc = "0.4.0"
+gradle-api = "8.0"
 
 [libraries]
 jibCore = { module = "com.google.cloud.tools:jib-core", version.ref = "jib" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+gradle-api = { module = "dev.gradleplugins:gradle-api", version = "8.0" }
 
 [plugins]
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
 axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kgp" }
+tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }

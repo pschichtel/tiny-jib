@@ -6,9 +6,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
-import org.gradle.kotlin.dsl.listProperty
-import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 interface PlatformsBuilder {
@@ -20,19 +17,19 @@ private class SimplePlatformsBuilder(
     private val objectFactory: ObjectFactory,
 ) : PlatformsBuilder {
     override fun platform(block: PlatformParameters.() -> Unit) {
-        val instance = objectFactory.newInstance<PlatformParameters>()
+        val instance = objectFactory.newInstance(PlatformParameters::class.java)
         instance.block()
         platforms.add(instance)
     }
 }
 
 abstract class BaseImageParameters @Inject constructor(private val objectFactory: ObjectFactory) : ImageParams(objectFactory) {
-    @Input
-    val image: Property<String> = objectFactory.property()
+    @get:Input
+    abstract val image: Property<String>
 
     @get:Optional
     @get:Nested
-    val platforms: ListProperty<PlatformParameters> = objectFactory.listProperty()
+    abstract val platforms: ListProperty<PlatformParameters>
 
     fun platforms(block: PlatformsBuilder.() -> Unit) {
         SimplePlatformsBuilder(platforms, objectFactory).block()

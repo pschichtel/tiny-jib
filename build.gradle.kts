@@ -1,11 +1,17 @@
 import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
 plugins {
-  `kotlin-dsl`
+
   `java-gradle-plugin`
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.tapmoc)
   alias(libs.plugins.pluginPublish)
   alias(libs.plugins.axionRelease)
   alias(libs.plugins.detekt)
+}
+
+tapmoc {
+  gradle("8.0.0")
 }
 
 scmVersion {
@@ -22,10 +28,6 @@ scmVersion {
 group = "tel.schich.tinyjib"
 version = scmVersion.version
 
-java.toolchain {
-  languageVersion = JavaLanguageVersion.of(8)
-}
-
 repositories {
   mavenCentral()
   gradlePluginPortal()
@@ -35,6 +37,13 @@ dependencies {
   implementation(libs.jibCore)
   implementation(libs.guava)
   implementation(libs.jacksonDatabind)
+  compileOnly(libs.gradle.api)
+}
+
+configurations.named("api").configure {
+  dependencies.removeIf {
+    it is FileCollectionDependency
+  }
 }
 
 gradlePlugin {
