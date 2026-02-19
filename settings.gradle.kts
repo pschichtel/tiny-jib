@@ -1,3 +1,7 @@
+rootProject.name = "tiny-jib"
+
+includeBuild("example")
+
 pluginManagement {
     repositories {
         mavenCentral()

@@ -1,3 +1,10 @@
+rootProject.name = "tiny-jib-example-multi-module"
+
+include(
+    ":mod-a",
+    ":mod-b",
+)
+
 pluginManagement {
     repositories {
         mavenLocal()
@@ -7,7 +14,3 @@ pluginManagement {
 
     includeBuild("../..")
 }
-
-
-include("mod-a")
-include("mod-b")
