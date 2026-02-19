@@ -2,21 +2,30 @@ package tel.schich.tinyjib.tasks
 
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.TarImage
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import tel.schich.tinyjib.TinyJibExtension
 import tel.schich.tinyjib.TinyJibTask
 import javax.inject.Inject
 
 abstract class TinyJibTarTask @Inject constructor(extension: TinyJibExtension) : TinyJibTask(extension) {
+    @Input
+    val offlineMode: Property<Boolean> = project.objects.property(Boolean::class.java)
+
+    init {
+        offlineMode.convention(project.gradle.startParameter.isOffline)
+    }
+
     @TaskAction
     fun performAction() {
-        val builder = setupBuilder()
         val targetImage = TarImage.at(extension.outputPaths.tar.get().toPath())
             .named(targetImageName())
         val containerizer = Containerizer.to(targetImage)
         buildImage(
-            builder,
             containerizer,
+            forDocker = false,
+            offlineMode = offlineMode.get(),
         )
     }
 }

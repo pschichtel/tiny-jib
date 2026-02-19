@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
 plugins {
-
   `java-gradle-plugin`
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.tapmoc)
@@ -81,6 +80,10 @@ tasks.jar {
   manifest {
     attributes("Implementation-Version" to version.toString())
   }
+}
+
+tasks.check {
+  dependsOn(tasks.detektMain, tasks.detektTest)
 }
 
 detekt {

@@ -6,5 +6,7 @@ pluginManagement {
     }
 }
 
+includeBuild("../..")
+
 include("mod-a")
 include("mod-b")

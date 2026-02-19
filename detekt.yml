@@ -9,3 +9,12 @@ style:
     active: false
   UnnecessaryLet:
     active: false
+  AbstractClassCanBeInterface:
+    active: false
+  AbstractClassCanBeConcreteClass:
+    active: false
+  ForbiddenComment:
+    active: false
+complexity:
+  LongParameterList:
+    active: false

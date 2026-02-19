@@ -57,8 +57,8 @@ private fun extraDirectoryLayerConfiguration(
     val walker = DirectoryWalker(sourceDirectory).filterRoot()
 
     fun matchers(patterns: List<String>): Sequence<Predicate<Path>> = patterns.asSequence()
-        .map { path ->
-            val matcher = matchPath(path)
+        .map { pattern ->
+            val matcher = matchPath(pattern)
             Predicate { path ->
                 matcher.matches(sourceDirectory.relativize(path))
             }

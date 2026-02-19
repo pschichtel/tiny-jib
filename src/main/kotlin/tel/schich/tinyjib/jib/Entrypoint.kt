@@ -24,13 +24,13 @@ private fun writeFileConservatively(file: Path, content: String) {
 }
 
 private fun JibContainerBuilder.addJvmArgFilesLayer(
-    cacheDir: Path,
+    applicationCachePath: Path,
     appRoot: AbsoluteUnixPath,
     classpath: String,
     mainClass: String
 ) {
-    val classpathFile: Path = cacheDir.resolve(JIB_CLASSPATH_FILE)
-    val mainClassFile: Path = cacheDir.resolve(JIB_MAIN_CLASS_FILE)
+    val classpathFile: Path = applicationCachePath.resolve(JIB_CLASSPATH_FILE)
+    val mainClassFile: Path = applicationCachePath.resolve(JIB_MAIN_CLASS_FILE)
 
     // It's perfectly fine to always generate a new temp file or rewrite an existing file. However,
     // fixing the source file path and preserving the file timestamp prevents polluting the Jib
@@ -49,15 +49,14 @@ private fun JibContainerBuilder.addJvmArgFilesLayer(
 }
 
 fun JibContainerBuilder.configureEntrypoint(
-    cacheDir: Path,
-    appRoot: String,
-    entrypoint: List<String>?,
+    applicationCachePath: Path,
+    appRoot: AbsoluteUnixPath,
+    configuredEntrypoint: List<String>?,
     mainClass: String,
     jvmFlags: List<String>,
     dependencies: List<Path>,
     extraClasspath: List<String>,
 ) {
-    val appRoot = AbsoluteUnixPath.get(appRoot)
     val classpath = mutableListOf<String>()
     classpath.addAll(extraClasspath)
     classpath.add(appRoot.resolve("resources").toString())
@@ -86,13 +85,13 @@ fun JibContainerBuilder.configureEntrypoint(
     }
 
     val classpathString = classpath.joinToString(":")
-    addJvmArgFilesLayer(cacheDir, appRoot, classpathString, mainClass)
+    addJvmArgFilesLayer(applicationCachePath, appRoot, classpathString, mainClass)
 
-    val entrypoint = if (entrypoint != null) {
-        if (entrypoint.size == 1 && entrypoint[0] == "INHERIT") {
+    val entrypoint = if (configuredEntrypoint != null) {
+        if (configuredEntrypoint.size == 1 && configuredEntrypoint[0] == "INHERIT") {
             null
         } else {
-            entrypoint
+            configuredEntrypoint
         }
     } else {
         buildList {

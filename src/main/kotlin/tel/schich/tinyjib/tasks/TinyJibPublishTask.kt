@@ -10,15 +10,14 @@ import javax.inject.Inject
 abstract class TinyJibPublishTask @Inject constructor(extension: TinyJibExtension) : TinyJibTask(extension) {
     @TaskAction
     fun performAction() {
-        val builder = setupBuilder()
-
         val imageRef = targetImageName()
         val targetImage = RegistryImage.named(imageRef)
-        configureCredentialRetrievers(imageRef, targetImage, extension.to)
+        jibService.get().configureCredentialRetrievers(imageRef, targetImage, extension.to)
         val containerizer = Containerizer.to(targetImage)
         buildImage(
-            builder,
             containerizer,
+            forDocker = false,
+            offlineMode = false,
         )
     }
 }

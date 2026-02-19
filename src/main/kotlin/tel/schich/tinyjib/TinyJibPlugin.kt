@@ -2,7 +2,7 @@ package tel.schich.tinyjib
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import tel.schich.tinyjib.service.ImageDownloadService
+import tel.schich.tinyjib.service.JibService
 import tel.schich.tinyjib.tasks.TinyJibDockerTask
 import tel.schich.tinyjib.tasks.TinyJibPublishTask
 import tel.schich.tinyjib.tasks.TinyJibTarTask
@@ -17,7 +17,7 @@ const val DOWNLOAD_SERVICE_NAME = "tinyJibImageDownloader"
 
 class TinyJibPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.gradle.sharedServices.registerIfAbsent(DOWNLOAD_SERVICE_NAME, ImageDownloadService::class.java) {}
+        project.gradle.sharedServices.registerIfAbsent(DOWNLOAD_SERVICE_NAME, JibService::class.java) {}
 
         val extension = project.extensions.create(
             EXTENSION_NAME,
