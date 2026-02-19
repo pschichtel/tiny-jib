@@ -4,9 +4,10 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+
+    includeBuild("../..")
 }
 
-includeBuild("../..")
 
 include("mod-a")
 include("mod-b")
