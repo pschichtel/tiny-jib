@@ -24,6 +24,25 @@ plugins {
 
 Then run `gradle tinyJibTar`.
 
+### Migration
+
+Here are some hints about how things need to change when migrating from Jib to TinyJib:
+
+* The extension name changes from `jib` to `tinyJib`. For example:
+  ```kotlin
+  tinyJib {
+    // Use something like the following code to resemble Jib's property-based configuration:
+    System.getProperty("jib.container.labels")?.also {
+      container.labels = it.split(',').associate { label -> label.substringBefore('=') to label.substringAfter('=') }
+    }
+  }
+  ```
+* Task names change as follows:
+  * `jib` -> `tinyJibPublish`
+  * `jibBuildTar` -> `tinyJibTar`
+  * `jibDockerBuild` -> `tinyJibDocker`
+* In the root project, a line like `alias(libs.plugins.jib) apply false` can be omitted completely.
+
 ## Features
 
 * No support for build systems other than Gradle
