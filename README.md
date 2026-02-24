@@ -66,6 +66,17 @@ tinyJib {
       label.substringBefore('=') to label.substringAfter('=')
     }
   }
+
+  System.getProperty("jib.from.platforms")?.also {
+    from.platforms {
+      it.split(',').map { platform ->
+        platform {
+          os = platform.substringBefore('/')
+          architecture = platform.substringAfter('/')
+        }
+      }
+    }
+  }
 }
 ```
 
