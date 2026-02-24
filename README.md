@@ -62,7 +62,21 @@ To resemble Jib's property-based configuration, you might want to use code simil
 ```kotlin
 tinyJib {
   System.getProperty("jib.container.labels")?.also {
-    container.labels = it.split(',').associate { label -> label.substringBefore('=') to label.substringAfter('=') }
+    container.labels = it.split(',').associate { label ->
+      label.substringBefore('=') to label.substringAfter('=')
+    }
+  }
+
+  System.getProperty("jib.from.platforms")?.also {
+    from.platforms {
+      it.split(',').map { platform ->
+        platform {
+          os = platform.substringBefore('/')
+          architecture = platform.substringAfter('/')
+        }
+      }
+    }
+  }
 }
 ```
 
