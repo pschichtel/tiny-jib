@@ -1,3 +1,10 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json"
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  packageRules: [
+    {
+      matchPackageNames: ["org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin"],
+      matchUpdateTypes: ["major"],
+      enabled: false,
+    },
+  ],
 }
