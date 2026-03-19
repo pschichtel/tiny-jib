@@ -68,7 +68,7 @@ dependencies {
  * So we remove `gradleApi()` here and instead pull the Nokee redistributed artifact as a compileOnly
  * dependency
  */
-configurations.named("api").configure {
+configurations.named("compileOnlyApi").configure {
   dependencies.removeIf {
     it is FileCollectionDependency
   }
