@@ -2,11 +2,24 @@ import org.jetbrains.kotlin.buildtools.api.ExperimentalBuildToolsApi
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath(libs.kotlin.serialization.gradle.plugin) {
+      version {
+        // Force the version of the compiler plugin, or the Kotlin BOM
+        // upgrades it to an incompatible version.
+        require(libs.versions.kotlin.compiler.get())
+      }
+    }
+  }
+}
 plugins {
   `java-gradle-plugin`
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.tapmoc)
-  alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.pluginPublish)
   alias(libs.plugins.axionRelease)
   alias(libs.plugins.detekt)
@@ -45,20 +58,6 @@ dependencies {
   implementation(libs.jibCore)
   implementation(libs.guava)
   compileOnly(libs.gradle.api)
-}
-
-/**
- * java-gradle-plugin adds `gradleApi()` to the `api` dependencies, which isn't ideal because:
- * - the user distribution provides the Gradle version.
- * - compiling against an older version of the Gradle API can help us detect invalid API usages.
- *
- * So we remove `gradleApi()` here and instead pull the Nokee redistributed artifact as a compileOnly
- * dependency
- */
-configurations.named("api").configure {
-  dependencies.removeIf {
-    it is FileCollectionDependency
-  }
 }
 
 gradlePlugin {
