@@ -2,11 +2,13 @@ package tel.schich.tinyjib.tasks
 
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.RegistryImage
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.TaskAction
 import tel.schich.tinyjib.TinyJibExtension
 import tel.schich.tinyjib.TinyJibTask
 import javax.inject.Inject
 
+@CacheableTask
 abstract class TinyJibPublishTask @Inject constructor(extension: TinyJibExtension) : TinyJibTask(extension) {
     @TaskAction
     fun performAction() {

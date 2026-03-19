@@ -3,12 +3,14 @@ package tel.schich.tinyjib.tasks
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.TarImage
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import tel.schich.tinyjib.TinyJibExtension
 import tel.schich.tinyjib.TinyJibTask
 import javax.inject.Inject
 
+@CacheableTask
 abstract class TinyJibTarTask @Inject constructor(extension: TinyJibExtension) : TinyJibTask(extension) {
     @Input
     val offlineMode: Property<Boolean> = project.objects.property(Boolean::class.java)
