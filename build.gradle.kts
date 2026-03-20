@@ -25,6 +25,8 @@ plugins {
   alias(libs.plugins.detekt)
 }
 
+plugins.apply("org.jetbrains.kotlin.plugin.serialization")
+
 tapmoc {
   gradle("8.0.0")
 }
