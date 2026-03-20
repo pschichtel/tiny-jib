@@ -21,6 +21,16 @@ plugins {
 class WorkaroundExtension {
   var compilerVersion: String? = null
 }
+
+/**
+ * Because we are using BTA, the kotlinc version is different from the KGP version.
+ *
+ * By default, KGP uses the KGP version for compiler plugins ([source](https://github.com/Jetbrains/kotlin/blob/bd48ae1608136d3185e61b441e75f0dda7ace7a6/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/SubpluginEnvironment.kt#L99)).
+ *
+ * In order for us to control the compiler plugin version, we fork the kotlinx.serialization plugin below.
+ *
+ * See https://youtrack.jetbrains.com/issue/KT-81629/
+ */
 open class WorkaroundSerializationGradleSubplugin :
   KotlinCompilerPluginSupportPlugin {
   private val workaroundExtension = WorkaroundExtension()
