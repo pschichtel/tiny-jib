@@ -58,7 +58,14 @@ dependencies {
   implementation(libs.jibCore)
   implementation(libs.guava)
   compileOnly(libs.gradle.api)
+
+  testImplementation(gradleTestKit())
+  testImplementation(libs.junit.api)
+  testRuntimeOnly(libs.junit.jupiter.engine)
+  testRuntimeOnly(libs.junit.platform.launcher)
 }
+
+val pluginId = "tel.schich.tinyjib"
 
 gradlePlugin {
   displayName
@@ -66,12 +73,50 @@ gradlePlugin {
   vcsUrl = "https://github.com/pschichtel/tiny-jib"
   plugins {
     create("tinyJibPlugin") {
-      id = "tel.schich.tinyjib"
+      id = pluginId
       implementationClass = "tel.schich.tinyjib.TinyJibPlugin"
       displayName = "Tiny Jib Gradle Plugin"
       description = "A heavily simplified version of Google's Jib plugin"
       tags = listOf("container", "jib")
     }
+  }
+}
+
+val testRepoName = "testRepo"
+val testRepoDir = project.layout.buildDirectory.dir("test-repo")
+
+publishing {
+  repositories {
+    maven {
+      name = testRepoName
+      url = testRepoDir.get().asFile.toURI()
+    }
+  }
+}
+
+tasks.test {
+  testLogging {
+    showStandardStreams = true
+  }
+
+  val publishTasks = tasks
+    .withType(PublishToMavenRepository::class)
+    .matching { it.repository.name == testRepoName }
+
+  dependsOn(publishTasks)
+
+  useJUnitPlatform()
+  systemProperty("tinyjib.id", pluginId)
+  systemProperty("tinyjib.version", project.version)
+  systemProperty("tinyjib.rootDir", project.rootDir.absolutePath)
+  systemProperty("tinyjib.repoUri", testRepoDir.get().asFile.toURI().toString())
+  systemProperty("tinyjib.gradleVersion", gradle.gradleVersion)
+
+  for (version in listOf(8, 11, 17, 21, 25)) {
+    val javaHome = javaToolchains.launcherFor {
+      languageVersion.set(JavaLanguageVersion.of(version))
+    }.get().metadata.installationPath.asFile.absolutePath
+    systemProperty("tinyjib.javaHome.$version", javaHome)
   }
 }
 

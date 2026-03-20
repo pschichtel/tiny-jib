@@ -7,6 +7,15 @@
       enabled: false,
     },
     {
+      matchPackageNames: [
+        "org.junit.jupiter:junit-jupiter-api",
+        "org.junit.jupiter:junit-jupiter-engine",
+        "org.junit.platform:junit-platform-launcher",
+      ],
+      matchUpdateTypes: ["major"],
+      enabled: false,
+    },
+    {
       matchPackageNames: ["dev.gradleplugins:gradle-api"],
       enabled: false,
     },
