@@ -55,7 +55,7 @@ tapmoc {
   gradle("8.0.0")
 }
 
-extensions.getByType(KotlinJvmExtension::class.java).apply {
+kotlin {
   @OptIn(ExperimentalBuildToolsApi::class, ExperimentalKotlinGradlePluginApi::class)
   compilerVersion.set(libs.versions.kotlin.compiler.get())
 }
@@ -108,7 +108,7 @@ tasks.jar {
 }
 
 tasks.check {
-  dependsOn(tasks.named("detektMain"), tasks.named("detektTest"))
+  dependsOn(tasks.detektMain, tasks.detektTest)
 }
 
 detekt {
