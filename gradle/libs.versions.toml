@@ -18,16 +18,16 @@ jibCore = { module = "com.google.cloud.tools:jib-core", version.ref = "jib" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 gradle-api = { module = "dev.gradleplugins:gradle-api", version.ref = "gradle-api" }
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization-json" }
-# Note how we're using the compiler version here and not the gradle plugin version
-# See https://youtrack.jetbrains.com/issue/KT-81629
-kotlin-serialization-gradle-plugin = { module = "org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin", version.ref = "kotlin-compiler" }
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 
 [plugins]
+# Note how we're using the compiler version here and not the gradle plugin version
+# See https://youtrack.jetbrains.com/issue/KT-81629
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-compiler" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-gradle-plugin" }
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
 axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-gradle-plugin" }
 tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }

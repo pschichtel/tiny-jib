@@ -1,29 +1,65 @@
 import org.jetbrains.kotlin.buildtools.api.ExperimentalBuildToolsApi
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
+import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
 
-buildscript {
-  repositories {
-    mavenCentral()
-  }
-  dependencies {
-    classpath(libs.kotlin.serialization.gradle.plugin) {
-      version {
-        // Force the version of the compiler plugin, or the Kotlin BOM
-        // upgrades it to an incompatible version.
-        require(libs.versions.kotlin.compiler.get())
-      }
-    }
-  }
-}
 plugins {
   `java-gradle-plugin`
   alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.kotlin.serialization).apply(false)
   alias(libs.plugins.tapmoc)
   alias(libs.plugins.pluginPublish)
   alias(libs.plugins.axionRelease)
   alias(libs.plugins.detekt)
 }
+
+
+class WorkaroundExtension {
+  var compilerVersion: String? = null
+}
+
+/**
+ * Because we are using BTA, the kotlinc version is different from the KGP version.
+ *
+ * By default, KGP uses the KGP version for compiler plugins ([source](https://github.com/Jetbrains/kotlin/blob/bd48ae1608136d3185e61b441e75f0dda7ace7a6/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/plugin/SubpluginEnvironment.kt#L99)).
+ *
+ * In order for us to control the compiler plugin version, we fork the kotlinx.serialization plugin below.
+ *
+ * See https://youtrack.jetbrains.com/issue/KT-81629/
+ */
+open class WorkaroundSerializationGradleSubplugin :
+  KotlinCompilerPluginSupportPlugin {
+  private val workaroundExtension = WorkaroundExtension()
+
+  companion object {
+    const val SERIALIZATION_GROUP_NAME = "org.jetbrains.kotlin"
+    const val SERIALIZATION_ARTIFACT_NAME = "kotlin-serialization-compiler-plugin-embeddable"
+  }
+
+  override fun apply(target: Project) {
+    super.apply(target)
+    target.extensions.add("workaroundExtension", workaroundExtension)
+  }
+  override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+
+  override fun applyToCompilation(
+    kotlinCompilation: KotlinCompilation<*>
+  ): Provider<List<SubpluginOption>> =
+    kotlinCompilation.target.project.provider { emptyList() }
+
+  override fun getPluginArtifact(): SubpluginArtifact =
+    SubpluginArtifact(SERIALIZATION_GROUP_NAME, SERIALIZATION_ARTIFACT_NAME, workaroundExtension.compilerVersion!!)
+
+  override fun getCompilerPluginId() = "org.jetbrains.kotlinx.serialization"
+}
+
+plugins.apply(WorkaroundSerializationGradleSubplugin::class.java)
+
+extensions.getByType(WorkaroundExtension::class.java).compilerVersion = libs.versions.kotlin.compiler.get()
 
 tapmoc {
   gradle("8.0.0")
