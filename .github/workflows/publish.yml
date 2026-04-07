@@ -4,6 +4,8 @@ on:
     tags:
       - 'v*.*.*'
 
+permissions: read-all
+
 jobs:
   publish:
     runs-on: ubuntu-latest
