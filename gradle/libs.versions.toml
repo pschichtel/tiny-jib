@@ -13,7 +13,7 @@ serialization-json = "1.11.0"
 gradle-api = "8.0"
 junit = "5.12.2"
 junit-platform = "1.14.3"
-test-containers = "2.0.4"
+test-containers = "2.0.5"
 
 [libraries]
 jibCore = { module = "com.google.cloud.tools:jib-core", version.ref = "jib" }
