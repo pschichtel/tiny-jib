@@ -4,7 +4,7 @@ pluginCompatibility = "1.0.0"
 jib = "0.28.1"
 guava = "33.6.0-jre"
 axionRelease = "1.21.1"
-detekt = "2.0.0-alpha.2"
+detekt = "2.0.0-alpha.3"
 kotlin-gradle-plugin = "2.3.21"
 # 2.2 to support languageVersion 1.8 to support Gradle 8
 kotlin-compiler = "2.2.21"
