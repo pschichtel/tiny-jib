@@ -27,14 +27,40 @@ class BasicFunctionalityTest {
     @TempDir
     lateinit var tempDir: Path
 
-    private fun testCanBuildMinimalImage(task: String, imageName: String): Pair<String, String> {
+    private fun testCanBuildMinimalImage(task: String, imageName: String, multiplatform: Boolean): Pair<String, String> {
         val mainClass = "tinyjib.Main"
+
+        val platforms = if (multiplatform) {
+            """
+                platforms {
+                  platform {
+                    architecture = "amd64"
+                    os = "linux"
+                  }
+                  platform {
+                    architecture = "arm64"
+                    os = "linux"
+                  }
+                } 
+            """.trimIndent()
+        } else {
+            ""
+        }
+
+        val imageFormat = if (multiplatform) {
+            """format = tel.schich.tinyjib.params.TargetImageParameters.ImageFormat.Docker"""
+        } else {
+            ""
+        }
+
         generateProject(tempDir, mainClass, MINIMUM_SUPPORTED_GRADLE_VERSION, config = """
             from {
                 image = "scratch"
+                $platforms
             }
             to {
                 image = "${escapeKotlinString(imageName)}"
+                $imageFormat
             }
             container {
                 mainClass = "${escapeKotlinString(mainClass)}"
@@ -71,13 +97,13 @@ class BasicFunctionalityTest {
 
     @Test
     fun canBuildMinimalTar() {
-        testCanBuildMinimalImage("tinyJibTar", "test:latest")
+        testCanBuildMinimalImage("tinyJibTar", "test:latest", multiplatform = false)
     }
 
     @Test
     fun canBuildMinimalDockerImage() {
         val name = "${UUID.randomUUID()}:latest"
-        val (imageId, _) = testCanBuildMinimalImage("tinyJibDocker", name)
+        val (imageId, _) = testCanBuildMinimalImage("tinyJibDocker", name, multiplatform = false)
         try {
             val dockerImage = inspectDockerImage(imageId)
             assertEquals(imageId, dockerImage.id)
@@ -97,7 +123,7 @@ class BasicFunctionalityTest {
         try {
             val registry = "127.0.0.1:$registryPort"
             val repo = "test/${UUID.randomUUID()}"
-            val (_, imageDigest) = testCanBuildMinimalImage("tinyJibPublish", "$registry/$repo:latest")
+            val (_, imageDigest) = testCanBuildMinimalImage("tinyJibPublish", "$registry/$repo:latest", multiplatform = true)
             val manifest = fetchManifest(registry, repo, imageDigest)
             val config = fetchConfig(registry, repo, manifest)
             assertEquals("java", config.config.entrypoint.first())

@@ -14,4 +14,13 @@ abstract class TargetImageParameters @Inject constructor(objectFactory: ObjectFa
     @get:Input
     @get:Optional
     abstract val tags: SetProperty<String>
+
+    @get:Input
+    abstract val format: Property<ImageFormat>
+
+    enum class ImageFormat { OCI, Docker }
+
+    init {
+        format.convention(ImageFormat.OCI)
+    }
 }
