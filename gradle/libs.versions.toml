@@ -5,7 +5,7 @@ jib = "0.28.2"
 guava = "33.7.1-jre"
 axionRelease = "1.21.3"
 detekt = "2.0.0-alpha.4"
-kotlin-gradle-plugin = "2.4.10"
+kotlin-gradle-plugin = "2.4.20"
 # 2.2 to support languageVersion 1.8 to support Gradle 8
 kotlin-compiler = "2.2.21"
 tapmoc = "0.4.2"
