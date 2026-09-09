@@ -1,6 +1,6 @@
 [versions]
 pluginPublish = "2.1.1"
-pluginCompatibility = "1.0.0"
+pluginCompatibility = "1.1.0"
 jib = "0.28.2"
 guava = "33.7.1-jre"
 axionRelease = "1.21.3"
