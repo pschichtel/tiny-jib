@@ -1,5 +1,5 @@
 [versions]
-pluginPublish = "2.2.0"
+pluginPublish = "2.2.1"
 pluginCompatibility = "1.1.0"
 jib = "0.28.2"
 guava = "33.7.1-jre"
