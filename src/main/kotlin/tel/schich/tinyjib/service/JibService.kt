@@ -32,6 +32,7 @@ import tel.schich.tinyjib.jib.configureEntrypoint
 import tel.schich.tinyjib.jib.configureExtraDirectoryLayers
 import tel.schich.tinyjib.jib.getCredentials
 import tel.schich.tinyjib.params.ImageParams
+import tel.schich.tinyjib.params.TargetImageParameters
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -196,7 +197,10 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
             .toList()
 
         return javaContainerBuilder.toContainerBuilder().apply {
-            setFormat(ImageFormat.OCI)
+            when (extension.to.format.get()) {
+                TargetImageParameters.ImageFormat.OCI -> setFormat(ImageFormat.OCI)
+                TargetImageParameters.ImageFormat.Docker -> setFormat(ImageFormat.Docker)
+            }
             if (platforms.isNotEmpty()) {
                 setPlatforms(platforms)
             }
