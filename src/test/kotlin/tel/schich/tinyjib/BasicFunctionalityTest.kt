@@ -151,6 +151,7 @@ class BasicFunctionalityTest {
             when (val manifest = fetchManifest(registry, repo, imageDigest)) {
                 is ImageManifest.DockerMultiplatformList -> {
                     assertTrue(multiplatform, "multiplatform list manifest should only exist when multiplatform is used")
+                    assertEquals(2, manifest.manifests.size)
                     for ((_, digest, _) in manifest.manifests) {
                         when (val actualManifest = fetchManifest(registry, repo, digest)) {
                             is ImageManifest.Docker -> {
