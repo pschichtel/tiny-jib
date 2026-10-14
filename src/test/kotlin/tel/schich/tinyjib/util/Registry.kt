@@ -4,28 +4,43 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.net.HttpURLConnection
 import java.net.URL
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
+@JsonIgnoreUnknownKeys
 data class BlobRef(
     val mediaType: String,
     val digest: String,
     val size: UInt,
 )
 
-/**
- * See: https://github.com/opencontainers/image-spec/blob/main/manifest.md
- */
+@OptIn(ExperimentalSerializationApi::class)
+@JsonClassDiscriminator("mediaType")
 @Serializable
-data class ImageManifest(
-    val schemaVersion: Int,
-    val mediaType: String,
-    val config: BlobRef,
-    val layers: List<BlobRef>,
-)
+sealed interface ImageManifest {
+    /**
+     * See: https://github.com/opencontainers/image-spec/blob/main/manifest.md
+     */
+    @SerialName("application/vnd.oci.image.manifest.v1+json")
+    @Serializable
+    data class Oci(
+        val schemaVersion: Int,
+        val config: BlobRef,
+        val layers: List<BlobRef>,
+    ) : ImageManifest
+
+    @SerialName("application/vnd.docker.distribution.manifest.list.v2+json")
+    @Serializable
+    data class DockerMultiplatformList(
+        val schemaVersion: Int,
+        val manifests: List<BlobRef>,
+    ) : ImageManifest
+}
 
 /**
  * See: https://github.com/opencontainers/image-spec/blob/main/config.md
@@ -75,7 +90,7 @@ fun fetchManifest(registry: String, imageRepo: String, imageDigest: String): Ima
     )
 }
 
-fun fetchConfig(registry: String, imageRepo: String, manifest: ImageManifest): ImageConfig {
+fun fetchConfig(registry: String, imageRepo: String, manifest: ImageManifest.Oci): ImageConfig {
     return fetchObject(
         registry,
         imageRepo,
