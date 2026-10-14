@@ -22,7 +22,6 @@ primarily due to the removal of many niche features and the switch to kotlin. Th
 * No support for web archives
 * No support for inferred auth
 * No support for property-based configuration (see below for a work-around)
-* No support for Docker image format
 * No support for Main class detection
 * No support for Gradle versions older than 8.3
 * Limited support for Java versions older than 9
