@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.TempDir
 import org.testcontainers.containers.GenericContainer
 import tel.schich.tinyjib.jib.ImageMetadataOutput
 import tel.schich.tinyjib.params.OUTPUT_FILE_NAME
+import tel.schich.tinyjib.params.TargetImageParameters
 import tel.schich.tinyjib.util.ExecuteResult
 import tel.schich.tinyjib.util.ImageManifest
 import tel.schich.tinyjib.util.MINIMUM_SUPPORTED_GRADLE_VERSION
@@ -52,7 +53,7 @@ class BasicFunctionalityTest {
         }
 
         val imageFormat = if (multiplatform) {
-            """format = tel.schich.tinyjib.params.TargetImageParameters.ImageFormat.Docker"""
+            """format = ${TargetImageParameters.ImageFormat::class.qualifiedName}.${TargetImageParameters.ImageFormat.Docker.name}"""
         } else {
             ""
         }
@@ -84,6 +85,7 @@ class BasicFunctionalityTest {
         }
 
         assertEquals(0, result.exitCode)
+        assertTrue(result.stdout.contains("BUILD SUCCESSFUL"))
 
         val buildDir = tempDir.resolve("build")
 
