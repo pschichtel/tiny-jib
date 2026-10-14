@@ -40,6 +40,14 @@ sealed interface ImageManifest {
         val schemaVersion: Int,
         val manifests: List<BlobRef>,
     ) : ImageManifest
+
+    @SerialName("application/vnd.docker.distribution.manifest.v2+json")
+    @Serializable
+    data class Docker(
+        val schemaVersion: Int,
+        val config: BlobRef,
+        val layers: List<BlobRef>,
+    ) : ImageManifest
 }
 
 /**
@@ -90,12 +98,18 @@ fun fetchManifest(registry: String, imageRepo: String, imageDigest: String): Ima
     )
 }
 
-fun fetchConfig(registry: String, imageRepo: String, manifest: ImageManifest.Oci): ImageConfig {
+private fun fetchConfig(registry: String, imageRepo: String, digest: String, mediaType: String): ImageConfig {
     return fetchObject(
         registry,
         imageRepo,
         kind = "blobs",
-        manifest.config.digest,
-        manifest.config.mediaType,
+        digest,
+        mediaType,
     )
 }
+
+fun fetchConfig(registry: String, imageRepo: String, manifest: ImageManifest.Oci) =
+    fetchConfig(registry, imageRepo, manifest.config.digest, manifest.config.mediaType)
+
+fun fetchConfig(registry: String, imageRepo: String, manifest: ImageManifest.Docker): ImageConfig =
+    fetchConfig(registry, imageRepo, manifest.config.digest, manifest.config.mediaType)

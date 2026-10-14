@@ -6,6 +6,7 @@ import kotlinx.serialization.json.decodeFromStream
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import org.junit.jupiter.api.io.TempDir
 import org.testcontainers.containers.GenericContainer
 import tel.schich.tinyjib.jib.ImageMetadataOutput
@@ -149,11 +150,29 @@ class BasicFunctionalityTest {
 
             when (val manifest = fetchManifest(registry, repo, imageDigest)) {
                 is ImageManifest.DockerMultiplatformList -> {
-                    // TODO verify manifests (multiple if mutliplatform == true!)
+                    assertTrue(multiplatform, "multiplatform list manifest should only exist when multiplatform is used")
+                    for ((_, digest, _) in manifest.manifests) {
+                        when (val actualManifest = fetchManifest(registry, repo, digest)) {
+                            is ImageManifest.Docker -> {
+                                val config = fetchConfig(registry, repo, actualManifest)
+                                assertEquals("java", config.config.entrypoint.first())
+                            }
+                            is ImageManifest.DockerMultiplatformList -> {
+                                fail("Multi-layer multiplatform manifests aren't a thing...")
+                            }
+                            is ImageManifest.Oci -> {
+                                val config = fetchConfig(registry, repo, actualManifest)
+                                assertEquals("java", config.config.entrypoint.first())
+                            }
+                        }
+                    }
                 }
                 is ImageManifest.Oci -> {
                     val config = fetchConfig(registry, repo, manifest)
                     assertEquals("java", config.config.entrypoint.first())
+                }
+                is ImageManifest.Docker -> {
+                    fail("A single docker manifest should not occur in these tests!")
                 }
             }
 
