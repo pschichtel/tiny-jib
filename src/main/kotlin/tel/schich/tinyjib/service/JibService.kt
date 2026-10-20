@@ -198,7 +198,7 @@ abstract class JibService : BuildService<BuildServiceParameters.None> {
 
         return javaContainerBuilder.toContainerBuilder().apply {
             when (extension.to.format.get()) {
-                TargetImageParameters.ImageFormat.OCI -> setFormat(ImageFormat.OCI)
+                TargetImageParameters.ImageFormat.OCI, null -> setFormat(ImageFormat.OCI)
                 TargetImageParameters.ImageFormat.Docker -> setFormat(ImageFormat.Docker)
             }
             if (platforms.isNotEmpty()) {
